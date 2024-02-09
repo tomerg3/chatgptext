@@ -1,0 +1,9 @@
+{
+    "version": 3,
+    "file": "globals.st.css.d.ts",
+    "sources": [
+        "../src/globals.st.css"
+    ],
+    "names": [],
+    "mappings": ";;;;;;IAAA;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+}
