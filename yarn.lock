@@ -4955,6 +4955,11 @@ reusify@^1.0.4:
   resolved "https://registry.npmjs.org/reusify/-/reusify-1.0.4.tgz"
   integrity sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==
 
+ricos-schema@^10.5.2:
+  version "10.5.2"
+  resolved "https://registry.npmjs.org/ricos-schema/-/ricos-schema-10.5.2.tgz"
+  integrity sha512-X2dysKeYJ8gBX8HUrfDPy2t8/cB7wNaByiePoF4AdO/KiZhMLNUa7L0MNyJb2buxpXgRDZlBu7DRv7w9W+hClg==
+
 rimraf@^3.0.2, rimraf@3.0.2:
   version "3.0.2"
   resolved "https://registry.npmjs.org/rimraf/-/rimraf-3.0.2.tgz"

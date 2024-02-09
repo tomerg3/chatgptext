@@ -1,5 +1,5 @@
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
-//import { observeState } from '@wix/dashboard-sdk';
+import { observeState } from '@wix/dashboard-sdk';
 import { showToast } from '@wix/dashboard-sdk';
 import axios from 'axios';
 import { FC, useEffect, useState } from 'react';
@@ -24,6 +24,8 @@ import { theme } from 'wix-style-react/themes/businessDashboard';
 import CONFIG from '../data/app-config';
 import { getInstance, getAdminKey } from '../data/utils';
 import { CrashedApp, InstallationError, PageLoader } from './WarningScreens/WarningScreens';
+import { RichContent } from 'ricos-schema';
+import { Node, Node_Type  } from 'ricos-schema';
 
 export interface DashboardWidgetProps {
     onLoaded?: () => void;
@@ -34,6 +36,8 @@ export const Widget: FC = () => {
     const [appData, setAppData] = useState(false);
     const [genButtonLoading, setGenButtonLoading] = useState(false);
     const [wordsNum, setWordsNum] = useState<number>(100);
+    const [draftName, setDraftName] = useState<string>('');
+    const [postContent, setPostContent] = useState<RichContent>({ nodes: [] });
 
     useEffect(() => {
         const search = window.location.search;
@@ -62,7 +66,22 @@ export const Widget: FC = () => {
             });
     }, []);
 
-    console.log('appData', appData);
+    const observerCallback = (state: any, envData: any) => {
+        console.log('Received state:', state);
+        console.log('Received envData:', envData);
+        const postTitle = state.getPostTitle();
+        postTitle.then((postTitle: string) => {
+            setDraftName(postTitle);
+        });
+
+        if (postContent) {
+            state.setPostContent({ nodes: [] });
+        }
+    };
+
+    useEffect(() => {
+        observeState(observerCallback);
+    }, [postContent]);
 
     const [additionalInfo, setAdditionalInfo] = useState('');
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(0);
@@ -202,6 +221,7 @@ export const Widget: FC = () => {
             .post(CONFIG.ajaxUrl, {
                 instance: getInstance(),
                 action: 'generateBlogDescription',
+                draftName: draftName,
                 additionalInfo: additionalInfo,
                 wordsNum: wordsNum,
                 style: selectedWritingStyle,
@@ -212,6 +232,25 @@ export const Widget: FC = () => {
                 k: getAdminKey(),
             })
             .then((response) => {
+                if (response.data.response) {
+                    const responseData = response.data.response;
+                    const newRichContent: RichContent = {
+                        nodes: [
+                            {
+                                type: Node_Type.PARAGRAPH,
+                                id: 'unique_id',
+                                nodes: [], 
+                                textData: {
+                                    text: responseData,
+                                    decorations: [] 
+                                },
+                            }
+                        ] 
+                    };
+                    console.log("newRichContent", newRichContent)
+                    setPostContent(newRichContent);
+                    observeState(observerCallback);
+                }
                 return response.data;
             })
             .then((data) => {
