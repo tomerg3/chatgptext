@@ -75,7 +75,8 @@ export const Widget: FC = () => {
         });
 
         if (postContent) {
-            state.setPostContent({ nodes: [] });
+            console.log("postContent", postContent)
+            state.setPostContent(postContent);
         }
     };
 
@@ -226,7 +227,7 @@ export const Widget: FC = () => {
                 wordsNum: wordsNum,
                 style: selectedWritingStyle,
                 customStyle: customStyle,
-                targetAuidience: selectedOptions,
+                targetAudience: selectedOptions,
                 customAudience: customAudience,
                 gptVersion: selectedVersion,
                 k: getAdminKey(),
@@ -234,20 +235,22 @@ export const Widget: FC = () => {
             .then((response) => {
                 if (response.data.response) {
                     const responseData = response.data.response;
-                    const newRichContent: RichContent = {
+                    const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
+                        type: Node_Type.PARAGRAPH,
+                        id: 'unique_paragraph_id', 
                         nodes: [
                             {
-                                type: Node_Type.PARAGRAPH,
-                                id: 'unique_id',
-                                nodes: [], 
                                 textData: {
-                                    text: responseData,
-                                    decorations: [] 
-                                },
+                                    text: paragraph,
+                                    decorations: [],
+                                }
                             }
-                        ] 
+                        ]
+                    }));
+                    const newRichContent: RichContent = {
+                        nodes: paragraphs
                     };
-                    console.log("newRichContent", newRichContent)
+                    console.log("newRichContent", newRichContent);
                     setPostContent(newRichContent);
                     observeState(observerCallback);
                 }
