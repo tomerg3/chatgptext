@@ -43,10 +43,10 @@ export const Widget: FC = () => {
     const [appData, setAppData] = useState(false);
     const [planType, setPlanType] = useState<string>("");
     const [remainingTokens, setRemainingTokens] = useState<number>();
+    const [totalTokens, setTotalTokens] = useState<number>();
     const [genButtonLoading, setGenButtonLoading] = useState(false);
     const [wordsNum, setWordsNum] = useState<number>(100);
     const [draftName, setDraftName] = useState<string>("");
-    const [postContent, setPostContent] = useState<RichContent>({ nodes: [] });
 
     useEffect(() => {
         const search = window.location.search;
@@ -67,11 +67,19 @@ export const Widget: FC = () => {
                     setIsAppCrashed(true);
                 } else {
                     setAppData(data);
-                    setPlanType(data.plan);
-                    setRemainingTokens(
-                        parseInt(data.totalTokens.replace(/,/g, "")) -
-                            parseInt(data.tokensUsage.replace(/,/g, ""))
+                    setPlanType(
+                        data.plan.charAt(0).toUpperCase() +
+                            data.plan.slice(1).toLowerCase()
                     );
+                    const totalTokens = parseInt(
+                        data.totalTokens.replace(/,/g, "")
+                    );
+                    setTotalTokens(totalTokens);
+                    const tokensUsage = parseInt(
+                        data.tokensUsage.replace(/,/g, "")
+                    );
+                    const remaining = totalTokens - tokensUsage;
+                    setRemainingTokens(remaining < 0 ? 0 : remaining);
                 }
             })
             .catch((error) => {
@@ -81,22 +89,15 @@ export const Widget: FC = () => {
     }, []);
 
     const observerCallback = (state: any, envData: any) => {
-        console.log("Received state:", state);
-        console.log("Received envData:", envData);
         const postTitle = state.getPostTitle();
         postTitle.then((postTitle: string) => {
             setDraftName(postTitle);
         });
-
-        if (postContent) {
-            console.log("postContent", postContent);
-            state.setPostContent(postContent);
-        }
     };
 
     useEffect(() => {
         observeState(observerCallback);
-    }, [postContent]);
+    }, []);
 
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
@@ -255,6 +256,11 @@ export const Widget: FC = () => {
                 k: getAdminKey(),
             })
             .then((response) => {
+                if (totalTokens && response.data.tokensUsage) {
+                    const tokensUsage = parseInt(response.data.tokensUsage);
+                    const remaining = totalTokens - tokensUsage;
+                    setRemainingTokens(remaining < 0 ? 0 : remaining);
+                }
                 if (response.data.response) {
                     const responseData = response.data.response;
                     const paragraphs = responseData
@@ -275,8 +281,13 @@ export const Widget: FC = () => {
                         nodes: paragraphs,
                     };
                     console.log("newRichContent", newRichContent);
-                    setPostContent(newRichContent);
-                    observeState(observerCallback);
+                    observeState((state: any, envData: any) => {
+                        const postTitle = state.getPostTitle();
+                        postTitle.then((postTitle: string) => {
+                            setDraftName(postTitle);
+                        });
+                        state.setPostContent(newRichContent);
+                    });
                 }
                 return response.data;
             })
@@ -342,24 +353,30 @@ export const Widget: FC = () => {
                         <Cell span={4}>
                             <Box direction="vertical">
                                 <Text weight="bold" size="small">
-                                    Remaining
+                                    Tokens
                                 </Text>
-                                <Text size="small">{remainingTokens}</Text>
+                                <Text size="small">
+                                    {remainingTokens
+                                        ?.toString()
+                                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                </Text>
                             </Box>
                         </Cell>
-                        <Cell span={4}>
-                            <Box direction="vertical">
-                                <Button
-                                    as="a"
-                                    skin="premium"
-                                    href={CONFIG.upgradeUrl}
-                                    target="_blank"
-                                    size="medium"
-                                >
-                                    Upgrade
-                                </Button>
-                            </Box>
-                        </Cell>
+                        {planType !== "premium" && (
+                            <Cell span={4}>
+                                <Box direction="vertical">
+                                    <Button
+                                        as="a"
+                                        skin="premium"
+                                        href={CONFIG.upgradeUrl}
+                                        target="_blank"
+                                        size="medium"
+                                    >
+                                        Upgrade
+                                    </Button>
+                                </Box>
+                            </Cell>
+                        )}
                     </Layout>
                 </Box>
             </Card>
