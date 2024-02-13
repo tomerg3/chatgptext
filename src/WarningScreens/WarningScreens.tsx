@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
     EmptyState,
     Image,
@@ -9,10 +9,10 @@ import {
     Card,
     Loader,
     Box,
-} from 'wix-style-react';
-import CONFIG from '../../data/app-config';
-import * as Icons from '@wix/wix-ui-icons-common';
-import serverError from '../../assets/img/EmptyState_ServerError.svg';
+} from "wix-style-react";
+import CONFIG from "../../data/app-config";
+import * as Icons from "@wix/wix-ui-icons-common";
+import serverError from "../../assets/img/EmptyState_ServerError.svg";
 
 export function CrashedApp() {
     return (
@@ -21,7 +21,13 @@ export function CrashedApp() {
                 <Card.Content>
                     <EmptyState
                         theme="page-no-border"
-                        image={<Image width="120px" src={serverError} transparent />}
+                        image={
+                            <Image
+                                width="120px"
+                                src={serverError}
+                                transparent
+                            />
+                        }
                         title="We couldn't load this page"
                         subtitle="Looks like there was a technical issue on our end. Wait a few minutes and try again."
                     >
@@ -41,34 +47,35 @@ export function CrashedApp() {
 export function InstallationError() {
     return (
         <WixDesignSystemProvider>
-            <Card>
-                <Card.Content>
-                    <Box>
-                        <Text weight="bold">
-                            Oops, we have detected an issue with the installation of the app, please
-                            try to
-                        </Text>
-                    </Box>
-                    <Text align="left">
-                        <ol type="1">
-                            <li>
-                                Go to{' '}
-                                <TextButton as="a" href={CONFIG.wixMarketUrl} target="_blank">
-                                    {CONFIG.wixMarketUrl}
-                                </TextButton>
-                            </li>
-                            <li>Click Add to Site</li>
-                            <li>Approve permissions</li>
-                        </ol>
-                        <br />
-                        If you still see this message, please contact us at{' '}
-                        <TextButton as="a" href="mailto:wix@presto-changeo.com">
-                            wix@presto-changeo.com
-                        </TextButton>{' '}
-                        and we will be glad to help.
+            <Box padding="0 !important" direction="vertical">
+                <Box>
+                    <Text weight="bold">
+                        Oops, we have detected an issue with the installation of
+                        the app, please try to
                     </Text>
-                </Card.Content>
-            </Card>
+                </Box>
+                <Text align="left">
+                    <ol type="1">
+                        <li>
+                            <TextButton
+                                as="a"
+                                href={CONFIG.wixMarketUrl}
+                                target="_blank"
+                            >
+                                Click Here
+                            </TextButton>
+                        </li>
+                        <li>Click Add to Site</li>
+                        <li>Approve permissions</li>
+                    </ol>
+                    <br />
+                    If you still see this message, please contact us at{" "}
+                    <TextButton as="a" href="mailto:wix@presto-changeo.com">
+                        wix@presto-changeo.com
+                    </TextButton>{" "}
+                    and we will be glad to help.
+                </Text>
+            </Box>
         </WixDesignSystemProvider>
     );
 }

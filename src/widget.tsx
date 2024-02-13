@@ -90,7 +90,6 @@ export const Widget: FC = () => {
                 })
                 .catch((error) => {
                     console.log("error from receiveing appData", error);
-                    setIsAppCrashed(true);
                 });
     
             getAppDataRequested.current = true;
