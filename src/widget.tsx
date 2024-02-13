@@ -3,7 +3,7 @@ axios.defaults.headers.post["Content-Type"] =
 import { observeState } from "@wix/dashboard-sdk";
 import { showToast } from "@wix/dashboard-sdk";
 import axios from "axios";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useRef  } from "react";
 import {
     Card,
     FormField,
@@ -49,46 +49,52 @@ export const Widget: FC = () => {
     const [wordsNum, setWordsNum] = useState<number>(500);
     const [draftName, setDraftName] = useState<string>("");
 
-    useEffect(() => {
-        const search = window.location.search;
-        const params = new URLSearchParams(search);
-        const instance = params.get("instance");
+    const getAppDataRequested = useRef(false);
 
-        axios
-            .post(CONFIG.ajaxUrl, {
-                instance: instance,
-                action: "getAppData",
-                k: getAdminKey(),
-            })
-            .then((response) => {
-                return response.data;
-            })
-            .then((data) => {
-                if (!data || typeof data.instance_id === "undefined") {
+    useEffect(() => {
+        if (!getAppDataRequested.current) {
+            const search = window.location.search;
+            const params = new URLSearchParams(search);
+            const instance = params.get("instance");
+    
+            axios
+                .post(CONFIG.ajaxUrl, {
+                    instance: instance,
+                    action: "getAppData",
+                    k: getAdminKey(),
+                })
+                .then((response) => {
+                    return response.data;
+                })
+                .then((data) => {
+                    if (!data || typeof data.instance_id === "undefined") {
+                        setIsAppCrashed(true);
+                    } else {
+                        setAppData(data);
+                        setPlanType(
+                            data.plan
+                                ? data.plan.charAt(0).toUpperCase() + data.plan.slice(1).toLowerCase()
+                                : "Free"
+                        );
+                        
+                        const totalTokens = parseInt(
+                            data.totalTokens.replace(/,/g, "")
+                        );
+                        setTotalTokens(totalTokens);
+                        const tokensUsage = parseInt(
+                            data.tokensUsage.replace(/,/g, "")
+                        );
+                        const remaining = totalTokens - tokensUsage;
+                        setRemainingTokens(remaining < 0 ? 0 : remaining);
+                    }
+                })
+                .catch((error) => {
+                    console.log("error from receiveing appData", error);
                     setIsAppCrashed(true);
-                } else {
-                    setAppData(data);
-                    setPlanType(
-                        data.plan
-                            ? data.plan.charAt(0).toUpperCase() + data.plan.slice(1).toLowerCase()
-                            : "Free"
-                    );
-                    
-                    const totalTokens = parseInt(
-                        data.totalTokens.replace(/,/g, "")
-                    );
-                    setTotalTokens(totalTokens);
-                    const tokensUsage = parseInt(
-                        data.tokensUsage.replace(/,/g, "")
-                    );
-                    const remaining = totalTokens - tokensUsage;
-                    setRemainingTokens(remaining < 0 ? 0 : remaining);
-                }
-            })
-            .catch((error) => {
-                console.log("error from receiveing appData", error);
-                setIsAppCrashed(true);
-            });
+                });
+    
+            getAppDataRequested.current = true;
+        }
     }, []);
 
     const observerCallback = (state: any, envData: any) => {
