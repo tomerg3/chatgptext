@@ -69,9 +69,11 @@ export const Widget: FC = () => {
                 } else {
                     setAppData(data);
                     setPlanType(
-                        data.plan.charAt(0).toUpperCase() +
-                            data.plan.slice(1).toLowerCase()
+                        data.plan
+                            ? data.plan.charAt(0).toUpperCase() + data.plan.slice(1).toLowerCase()
+                            : "Free"
                     );
+                    
                     const totalTokens = parseInt(
                         data.totalTokens.replace(/,/g, "")
                     );

@@ -18,7 +18,6 @@ export function CrashedApp() {
     return (
         <WixDesignSystemProvider>
             <Card>
-                <Card.Header title={CONFIG.displayName} subtitle={CONFIG.pageSubtitle} />
                 <Card.Content>
                     <EmptyState
                         theme="page-no-border"
@@ -43,7 +42,6 @@ export function InstallationError() {
     return (
         <WixDesignSystemProvider>
             <Card>
-                <Card.Header title={CONFIG.displayName} />
                 <Card.Content>
                     <Box>
                         <Text weight="bold">
@@ -80,7 +78,6 @@ export function PageLoader() {
         <WixDesignSystemProvider>
             <Box>
                 <Card>
-                    <Card.Header title={CONFIG.displayName} subtitle={CONFIG.pageSubtitle} />
                     <Card.Content>
                         <Box>&nbsp;</Box>
                         <Loader size="medium" />
