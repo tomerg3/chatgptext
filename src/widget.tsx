@@ -191,7 +191,7 @@ export const Widget: FC = () => {
                             nodes: [
                                 {
                                     textData: {
-                                        text: paragraph,
+                                        text: paragraph + "\n",
                                         decorations: [],
                                     },
                                 },
