@@ -55,10 +55,6 @@ export const Widget: FC = () => {
     const [hasPostContent, setHasPostConent] = useState(false);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
 
-    const showWarning = () => {
-        setWarningIsOpen(true);
-    };
-
     const getAppDataRequested = useRef(false);
 
     useEffect(() => {
@@ -116,24 +112,45 @@ export const Widget: FC = () => {
     const observerCallback = (state: any, envData: any) => {
         const postTitle = state.getPostTitle();
         postTitle.then((postTitle: string) => {
+            console.log("debug postTitle", postTitle)
             setDraftName(postTitle);
+            if(postTitle && postTitle !== ""){
+                generateButtonHandler({ preventDefault: () => {} });
+                return;
+            } else {
+                showToast({
+                    message: "Please enter the post title to generate the content",
+                    type: "error",
+                });
+                return;
+            }
         });
 
         const postContent = state.getPostContent();
-        postContent.then((postContent: { nodes: string | any[] }) => {
+        postContent.then((postContent: { nodes: any[] }) => {
+            console.log("debug postContent", postContent)
             if (postContent && postContent.nodes) {
-                if (postContent.nodes.length > 0) {
-                    setHasPostConent(true);
-                } else {
-                    setHasPostConent(false);
-                }
+                let hasText = false;
+                (postContent.nodes as any[]).forEach(paragraph => {
+                    if (paragraph.type === "PARAGRAPH" && paragraph.nodes.length > 0) {
+                        const hasNonEmptyText = paragraph.nodes.some((node: any) => {
+                            return node.type === "TEXT" && node.textData.text.trim() !== "";
+                        });
+                        console.log("hasNonEmptyText", hasNonEmptyText)
+                        if (hasNonEmptyText) {
+                            hasText = true;
+                            setWarningIsOpen(true);
+                            return;
+                        } else {
+                            setWarningIsOpen(false);
+                            generateButtonHandler({ preventDefault: () => {} });
+                            return;
+                        }
+                    }
+                });
             }
         });
     };
-
-    useEffect(() => {
-        observeState(observerCallback);
-    }, []);
 
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
@@ -193,20 +210,16 @@ export const Widget: FC = () => {
         setAdditionalInfo(e.target.value);
     };
 
+    const generateButton = () => {
+        observeState(observerCallback);
+    }
+
     const generateButtonHandlerWrapper = () => {
         generateButtonHandler({ preventDefault: () => {} });
     };
 
     const generateButtonHandler = (event: { preventDefault: () => void }) => {
         event.preventDefault();
-
-        if (!draftName) {
-            showToast({
-                message: "Please enter the post title to generate the content",
-                type: "error",
-            });
-            return;
-        }
 
         setGenButtonLoading(true);
         axios
@@ -358,7 +371,7 @@ export const Widget: FC = () => {
         <ThemeProvider theme={theme({ active: true })}>
             <Card stretchVertically>
                 <Box padding="0 !important">
-                    <Layout alignItems="center">
+                    <Layout alignItems="center" gap={10}>
                         <Cell span={6}>
                             <Box direction="vertical" align="center">
                                 <Text weight="bold" size="small">
@@ -750,11 +763,7 @@ export const Widget: FC = () => {
                                             <Button
                                                 size="medium"
                                                 dataHook="gpt-product-generate-button"
-                                                onClick={
-                                                    hasPostContent
-                                                        ? showWarning
-                                                        : generateButtonHandler
-                                                }
+                                                onClick={generateButton}
                                             >
                                                 {genButtonLoading ? (
                                                     <Loader size="tiny" />
@@ -768,16 +777,7 @@ export const Widget: FC = () => {
                                                     <Cell span={12}>
                                                         <Box direction="vertical">
                                                             <Text>
-                                                                You already have
-                                                                content in your
-                                                                blog.
-                                                            </Text>
-                                                            <Text>
-                                                                On click
-                                                                "Generate"
-                                                                existing text
-                                                                will be
-                                                                overwritten.
+                                                                The content of the current blog will be overwritten
                                                             </Text>
                                                         </Box>
                                                     </Cell>
@@ -805,7 +805,7 @@ export const Widget: FC = () => {
                                                                 {genButtonLoading ? (
                                                                     <Loader size="tiny" />
                                                                 ) : (
-                                                                    "Generate"
+                                                                    "Continue"
                                                                 )}
                                                             </Button>
                                                         </Box>
