@@ -109,47 +109,65 @@ export const Widget: FC = () => {
         }
     }, []);
 
-    const observerCallback = (state: any, envData: any) => {
-        const postTitle = state.getPostTitle();
-        postTitle.then((postTitle: string) => {
-            console.log("debug postTitle", postTitle)
-            setDraftName(postTitle);
-            if(postTitle && postTitle !== ""){
-                generateButtonHandler({ preventDefault: () => {} });
-                return;
-            } else {
-                showToast({
-                    message: "Please enter the post title to generate the content",
-                    type: "error",
-                });
-                return;
-            }
-        });
+    const observerCallback = async (state: any, envData: any) => {
+        try {
+            let content;
 
-        const postContent = state.getPostContent();
-        postContent.then((postContent: { nodes: any[] }) => {
-            console.log("debug postContent", postContent)
+            const postContent = await state.getPostContent();
+            console.log("postContent", postContent);
             if (postContent && postContent.nodes) {
-                let hasText = false;
-                (postContent.nodes as any[]).forEach(paragraph => {
-                    if (paragraph.type === "PARAGRAPH" && paragraph.nodes.length > 0) {
-                        const hasNonEmptyText = paragraph.nodes.some((node: any) => {
-                            return node.type === "TEXT" && node.textData.text.trim() !== "";
-                        });
-                        console.log("hasNonEmptyText", hasNonEmptyText)
+                (postContent.nodes as any[]).forEach((paragraph) => {
+                    if (
+                        paragraph.type === "PARAGRAPH" &&
+                        paragraph.nodes.length > 0
+                    ) {
+                        const hasNonEmptyText = paragraph.nodes.some(
+                            (node: any) => {
+                                return (
+                                    node.type === "TEXT" &&
+                                    node.textData.text.trim() !== ""
+                                );
+                            }
+                        );
                         if (hasNonEmptyText) {
-                            hasText = true;
-                            setWarningIsOpen(true);
-                            return;
+                            content = false;
+                            console.log("content debug false");
                         } else {
-                            setWarningIsOpen(false);
-                            generateButtonHandler({ preventDefault: () => {} });
-                            return;
+                            content = true;
+                            console.log("content debu true");
                         }
                     }
                 });
             }
-        });
+
+            const postTitle = await state.getPostTitle();
+            setDraftName(postTitle);
+
+            if (postTitle && postTitle !== "" && content) {
+                setWarningIsOpen(false);
+                generateButtonHandler({ preventDefault: () => {} });
+                return;
+            } else if (!content && postTitle && postTitle !== "") {
+                setWarningIsOpen(true);
+                return;
+            } else if ((!postTitle || postTitle == "") && content) {
+                showToast({
+                    message:
+                        "Please enter the post title to generate the content",
+                    type: "error",
+                });
+                return;
+            } else {
+                showToast({
+                    message:
+                        "Please enter the post title to generate the content",
+                    type: "error",
+                });
+                return;
+            }
+        } catch (error) {
+            console.log("Error in observerCallback:", error);
+        }
     };
 
     const [additionalInfo, setAdditionalInfo] = useState("");
@@ -212,7 +230,7 @@ export const Widget: FC = () => {
 
     const generateButton = () => {
         observeState(observerCallback);
-    }
+    };
 
     const generateButtonHandlerWrapper = () => {
         generateButtonHandler({ preventDefault: () => {} });
@@ -371,13 +389,27 @@ export const Widget: FC = () => {
         <ThemeProvider theme={theme({ active: true })}>
             <Card stretchVertically>
                 <Box padding="0 !important">
-                    <Layout alignItems="center" gap={10}>
+                    <Layout alignItems="center">
                         <Cell span={6}>
                             <Box direction="vertical" align="center">
                                 <Text weight="bold" size="small">
                                     Plan Type
                                 </Text>
                                 <Text size="small">{planType}</Text>
+                            </Box>
+
+                            <Box align="center" paddingTop={"10px"}>
+                                <Button
+                                    skin="dark"
+                                    priority="primary"
+                                    size="medium"
+                                    onClick={() => {
+                                        setIsHelperOpen(true);
+                                        setHelperStep(1);
+                                    }}
+                                >
+                                    Tutorial
+                                </Button>
                             </Box>
                         </Cell>
                         <Cell span={6}>
@@ -395,25 +427,9 @@ export const Widget: FC = () => {
                                         .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                                 </Text>
                             </Box>
-                        </Cell>
-                        <Cell span={6}>
-                            <Box align="center">
-                                <Button
-                                    skin="dark"
-                                    priority="primary"
-                                    size="medium"
-                                    onClick={() => {
-                                        setIsHelperOpen(true);
-                                        setHelperStep(1);
-                                    }}
-                                >
-                                    Tutorial
-                                </Button>
-                            </Box>
-                        </Cell>
-                        {planType !== "premium" && (
-                            <Cell span={6}>
-                                <Box align="center">
+
+                            {planType !== "premium" && (
+                                <Box align="center" paddingTop={"10px"}>
                                     <Button
                                         as="a"
                                         skin="premium"
@@ -424,8 +440,8 @@ export const Widget: FC = () => {
                                         Upgrade
                                     </Button>
                                 </Box>
-                            </Cell>
-                        )}
+                            )}
+                        </Cell>
                     </Layout>
                 </Box>
             </Card>
@@ -777,7 +793,10 @@ export const Widget: FC = () => {
                                                     <Cell span={12}>
                                                         <Box direction="vertical">
                                                             <Text>
-                                                                The content of the current blog will be overwritten
+                                                                The content of
+                                                                the current blog
+                                                                will be
+                                                                overwritten
                                                             </Text>
                                                         </Box>
                                                     </Cell>
