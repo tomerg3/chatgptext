@@ -3,7 +3,7 @@ axios.defaults.headers.post["Content-Type"] =
 import { observeState } from "@wix/dashboard-sdk";
 import { showToast } from "@wix/dashboard-sdk";
 import axios from "axios";
-import { FC, useEffect, useState, useRef  } from "react";
+import { FC, useEffect, useState, useRef } from "react";
 import {
     Card,
     FormField,
@@ -21,6 +21,8 @@ import {
     Box,
     Loader,
     Divider,
+    FloatingHelper,
+    SectionHelper,
 } from "wix-style-react";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
@@ -48,6 +50,14 @@ export const Widget: FC = () => {
     const [genButtonLoading, setGenButtonLoading] = useState(false);
     const [wordsNum, setWordsNum] = useState<number>(500);
     const [draftName, setDraftName] = useState<string>("");
+    const [helperStep, setHelperStep] = useState<number>(1);
+    const [isHelperOpen, setIsHelperOpen] = useState(true);
+    const [hasPostContent, setHasPostConent] = useState(false);
+    const [warningIsOpen, setWarningIsOpen] = useState(false);
+
+    const showWarning = () => {
+        setWarningIsOpen(true);
+    };
 
     const getAppDataRequested = useRef(false);
 
@@ -56,7 +66,7 @@ export const Widget: FC = () => {
             const search = window.location.search;
             const params = new URLSearchParams(search);
             const instance = params.get("instance");
-    
+
             axios
                 .post(CONFIG.ajaxUrl, {
                     instance: instance,
@@ -73,10 +83,11 @@ export const Widget: FC = () => {
                         setAppData(data);
                         setPlanType(
                             data.plan
-                                ? data.plan.charAt(0).toUpperCase() + data.plan.slice(1).toLowerCase()
+                                ? data.plan.charAt(0).toUpperCase() +
+                                      data.plan.slice(1).toLowerCase()
                                 : "Free"
                         );
-                        
+
                         const totalTokens = parseInt(
                             data.totalTokens.replace(/,/g, "")
                         );
@@ -86,12 +97,18 @@ export const Widget: FC = () => {
                         );
                         const remaining = totalTokens - tokensUsage;
                         setRemainingTokens(remaining < 0 ? 0 : remaining);
+
+                        if (data.tutorialFinished == 1) {
+                            setIsHelperOpen(false);
+                        } else {
+                            setIsHelperOpen(true);
+                        }
                     }
                 })
                 .catch((error) => {
                     console.log("error from receiveing appData", error);
                 });
-    
+
             getAppDataRequested.current = true;
         }
     }, []);
@@ -100,6 +117,15 @@ export const Widget: FC = () => {
         const postTitle = state.getPostTitle();
         postTitle.then((postTitle: string) => {
             setDraftName(postTitle);
+        });
+
+        const postContent = state.getPostContent();
+        postContent.then((postContent: { nodes: string | any[] }) => {
+            if (postContent.nodes.length > 0) {
+                setHasPostConent(true);
+            } else {
+                setHasPostConent(false);
+            }
         });
     };
 
@@ -165,8 +191,20 @@ export const Widget: FC = () => {
         setAdditionalInfo(e.target.value);
     };
 
+    const generateButtonHandlerWrapper = () => {
+        generateButtonHandler({ preventDefault: () => {} });
+    };
+
     const generateButtonHandler = (event: { preventDefault: () => void }) => {
         event.preventDefault();
+
+        if (!draftName) {
+            showToast({
+                message: "Please enter the post title to generate the content",
+                type: "error",
+            });
+            return;
+        }
 
         setGenButtonLoading(true);
         axios
@@ -251,6 +289,55 @@ export const Widget: FC = () => {
             });
     };
 
+    const handleHelperActionClick = () => {
+        if (helperStep <= 6) {
+            setHelperStep((step) => step + 1);
+        } else {
+            setIsHelperOpen(false);
+        }
+    };
+    const helperClose = () => {
+        setIsHelperOpen(false);
+    };
+
+    useEffect(() => {
+        if (isHelperOpen && helperStep === 3) {
+            const voiceDropdown = document.querySelector(
+                '[data-hook="gpt-voice"] input'
+            ) as HTMLInputElement;
+            if (voiceDropdown) {
+                voiceDropdown.click();
+            }
+        }
+
+        let targetElement;
+        if (helperStep == 1) {
+            targetElement = document.querySelector(
+                '[data-hook="gpt-additional-details"]'
+            );
+        } else if (helperStep == 2) {
+            targetElement = document.querySelector(
+                '[data-hook="gpt-number-words"]'
+            );
+        } else if (helperStep == 3) {
+            targetElement = document.querySelector('[data-hook="gpt-voice"]');
+        } else if (helperStep == 4) {
+            targetElement = document.querySelector(
+                '[data-hook="gpt-target-audience"]'
+            );
+        } else if (helperStep == 5) {
+            targetElement = document.querySelector('[data-hook="gpt-version"]');
+        } else if (helperStep >= 6) {
+            targetElement = document.querySelector(
+                '[dataHook="gpt-product-generate-button"]'
+            );
+        }
+
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [isHelperOpen, helperStep]);
+
     if (isAppCrashed) {
         return <CrashedApp />;
     }
@@ -267,17 +354,17 @@ export const Widget: FC = () => {
         <ThemeProvider theme={theme({ active: true })}>
             <Card stretchVertically>
                 <Box padding="0 !important">
-                    <Layout>
-                        <Cell span={4}>
-                            <Box direction="vertical">
+                    <Layout alignItems="center">
+                        <Cell span={6}>
+                            <Box direction="vertical" align="center">
                                 <Text weight="bold" size="small">
                                     Plan Type
                                 </Text>
                                 <Text size="small">{planType}</Text>
                             </Box>
                         </Cell>
-                        <Cell span={4}>
-                            <Box direction="vertical">
+                        <Cell span={6}>
+                            <Box direction="vertical" align="center">
                                 <Text weight="bold" size="small">
                                     Tokens
                                 </Text>
@@ -285,12 +372,31 @@ export const Widget: FC = () => {
                                     {remainingTokens
                                         ?.toString()
                                         .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                    /
+                                    {totalTokens
+                                        ?.toString()
+                                        .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                                 </Text>
                             </Box>
                         </Cell>
+                        <Cell span={6}>
+                            <Box align="center">
+                                <Button
+                                    skin="dark"
+                                    priority="primary"
+                                    size="medium"
+                                    onClick={() => {
+                                        setIsHelperOpen(true);
+                                        setHelperStep(1);
+                                    }}
+                                >
+                                    Tutorial
+                                </Button>
+                            </Box>
+                        </Cell>
                         {planType !== "premium" && (
-                            <Cell span={4}>
-                                <Box direction="vertical">
+                            <Cell span={6}>
+                                <Box align="center">
                                     <Button
                                         as="a"
                                         skin="premium"
@@ -313,44 +419,141 @@ export const Widget: FC = () => {
                 <Box padding="0 !important">
                     <Layout alignItems="center">
                         <Cell span={12}>
-                            <FormField label="Additional Information">
-                                <InputArea
-                                    value={additionalInfo}
-                                    onChange={handleAdditionalInfoChange}
-                                    rows={6}
-                                />
-                            </FormField>
+                            <FloatingHelper
+                                opened={isHelperOpen && helperStep === 1}
+                                width={"300px"}
+                                onClose={helperClose}
+                                target={
+                                    <FormField
+                                        label="Additional Details"
+                                        statusMessage="Include any information you would like mentioned, or any specific instructions."
+                                        dataHook="gpt-additional-details"
+                                    >
+                                        <InputArea
+                                            value={additionalInfo}
+                                            onChange={
+                                                handleAdditionalInfoChange
+                                            }
+                                            rows={6}
+                                        />
+                                    </FormField>
+                                }
+                                content={
+                                    <FloatingHelper.Content
+                                        body={
+                                            <Box
+                                                direction="vertical"
+                                                gap="12px"
+                                            >
+                                                <Text light>
+                                                    Include any information you
+                                                    would like mentioned, or any
+                                                    specific instructions.
+                                                </Text>
+                                                <Text light>
+                                                    For Example:
+                                                    <br />
+                                                    <ul>
+                                                        <li>
+                                                            {" "}
+                                                            Mention at least 5
+                                                            times each of the
+                                                            following keywords
+                                                            "keyword 1",
+                                                            "keyword 2".
+                                                        </li>
+                                                        <li>
+                                                            List a few pros and
+                                                            cons
+                                                        </li>
+                                                        <li>
+                                                            {" "}
+                                                            Expand on the
+                                                            following point: You
+                                                            can only help those
+                                                            who want to help
+                                                            themselves.
+                                                        </li>
+                                                    </ul>
+                                                </Text>
+                                            </Box>
+                                        }
+                                        actionText="Next"
+                                        onActionClick={() => {
+                                            handleHelperActionClick();
+                                        }}
+                                    />
+                                }
+                                placement="bottom"
+                            />
                         </Cell>
                         <Cell span={12}>
-                            <FormField
-                                label="Number of Words"
-                                statusMessage={
-                                    selectedVersion === 0
-                                        ? "Each word uses approximately 1-2 tokens)."
-                                        : "Each word uses approximately 5-10 tokens)."
+                            <FloatingHelper
+                                opened={isHelperOpen && helperStep === 2}
+                                width={"300px"}
+                                onClose={helperClose}
+                                target={
+                                    <FormField
+                                        label="Number of Words"
+                                        statusMessage={
+                                            selectedVersion === 0
+                                                ? "Each word uses approximately 1-2 tokens)."
+                                                : "Each word uses approximately 5-10 tokens)."
+                                        }
+                                        data-hook="gpt-number-words"
+                                    >
+                                        <NumberInput
+                                            value={wordsNum}
+                                            onChange={handleWordsNumChange}
+                                            min={0}
+                                        />
+                                    </FormField>
                                 }
-                            >
-                                <NumberInput
-                                    value={wordsNum}
-                                    onChange={handleWordsNumChange}
-                                    min={0}
-                                />
-                            </FormField>
+                                content={
+                                    <FloatingHelper.Content
+                                        body="Select the desired length of the description"
+                                        actionText="Next"
+                                        onActionClick={() => {
+                                            handleHelperActionClick();
+                                        }}
+                                    />
+                                }
+                                placement="bottom"
+                            />
                         </Cell>
                         <Cell span={selectedWritingStyle !== 10 ? 12 : 6}>
-                            <FormField
-                                label="Writing Style (Voice)"
-                                statusMessage={
-                                    writingStylesOptions[selectedWritingStyle]
-                                        .description
+                            <FloatingHelper
+                                opened={isHelperOpen && helperStep === 3}
+                                width={"300px"}
+                                onClose={helperClose}
+                                target={
+                                    <FormField
+                                        label="Writing Style (Voice)"
+                                        statusMessage={
+                                            writingStylesOptions[
+                                                selectedWritingStyle
+                                            ].description
+                                        }
+                                    >
+                                        <Dropdown
+                                            selectedId={selectedWritingStyle}
+                                            options={writingStylesOptions}
+                                            onSelect={handleSelectWritingStyle}
+                                            dataHook="gpt-voice"
+                                        />
+                                    </FormField>
                                 }
-                            >
-                                <Dropdown
-                                    selectedId={selectedWritingStyle}
-                                    options={writingStylesOptions}
-                                    onSelect={handleSelectWritingStyle}
-                                />
-                            </FormField>
+                                content={
+                                    <FloatingHelper.Content
+                                        body="Select the desired writing style (voice) from our existing list, or enter your own"
+                                        actionText="Next"
+                                        onActionClick={() => {
+                                            handleHelperActionClick();
+                                        }}
+                                    />
+                                }
+                                placement="top"
+                            />
                         </Cell>
                         {selectedWritingStyle === 10 && (
                             <Cell span={6}>
@@ -365,29 +568,68 @@ export const Widget: FC = () => {
                             </Cell>
                         )}
                         <Cell span={12}>
-                            <FormField
-                                label="Target Audience"
-                                statusMessage="Select one or more target audience for tailored content that addresses their specific needs, preferences, and lifestyles."
-                            >
-                                <MultiSelectCheckbox
-                                    options={serviceOptions}
-                                    selectedOptions={selectedOptions}
-                                    onSelect={(option) =>
-                                        setSelectedOptions([
-                                            ...selectedOptions,
-                                            Number(option),
-                                        ])
-                                    }
-                                    onDeselect={(option) =>
-                                        setSelectedOptions(
-                                            selectedOptions.filter(
-                                                (item) =>
-                                                    item !== Number(option)
-                                            )
-                                        )
-                                    }
-                                />
-                            </FormField>
+                            <FloatingHelper
+                                opened={isHelperOpen && helperStep === 4}
+                                width={"300px"}
+                                onClose={helperClose}
+                                target={
+                                    <FormField
+                                        label="Target Audience"
+                                        statusMessage="Select one or more target audience for tailored content that addresses their specific needs, preferences, and lifestyles."
+                                        data-hook="gpt-target-audience"
+                                    >
+                                        <MultiSelectCheckbox
+                                            options={serviceOptions}
+                                            selectedOptions={selectedOptions}
+                                            onSelect={(option) =>
+                                                setSelectedOptions([
+                                                    ...selectedOptions,
+                                                    Number(option),
+                                                ])
+                                            }
+                                            onDeselect={(option) =>
+                                                setSelectedOptions(
+                                                    selectedOptions.filter(
+                                                        (item) =>
+                                                            item !==
+                                                            Number(option)
+                                                    )
+                                                )
+                                            }
+                                        />
+                                    </FormField>
+                                }
+                                content={
+                                    <FloatingHelper.Content
+                                        body={
+                                            <Box
+                                                direction="vertical"
+                                                gap="12px"
+                                            >
+                                                <Text light>
+                                                    You have the option to
+                                                    select one or more target
+                                                    audiences for tailored
+                                                    content that addresses their
+                                                    specific needs, preferences,
+                                                    and lifestyles
+                                                </Text>
+                                                <Text light>
+                                                    * Selection a Target
+                                                    Audience is useful for
+                                                    longer descriptions (100+
+                                                    words)
+                                                </Text>
+                                            </Box>
+                                        }
+                                        actionText="Next"
+                                        onActionClick={() => {
+                                            handleHelperActionClick();
+                                        }}
+                                    />
+                                }
+                                placement="bottom"
+                            />
                         </Cell>
                         {selectedOptions.includes(22) && (
                             <Cell span={12}>
@@ -402,20 +644,62 @@ export const Widget: FC = () => {
                         )}
 
                         <Cell span={12}>
-                            <FormField
-                                label="ChatGPT Version"
-                                statusMessage={
-                                    selectedVersion === 0
-                                        ? "GPT-3.5 provides proficient text generation with a solid foundation of understanding and creativity."
-                                        : "GPT-4 offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information."
+                            <FloatingHelper
+                                opened={isHelperOpen && helperStep === 5}
+                                width={"300px"}
+                                onClose={helperClose}
+                                target={
+                                    <FormField
+                                        label="ChatGPT Version"
+                                        statusMessage={
+                                            selectedVersion === 0
+                                                ? "GPT-3.5 provides proficient text generation with a solid foundation of understanding and creativity."
+                                                : "GPT-4 offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information."
+                                        }
+                                        data-hook="gpt-version"
+                                    >
+                                        <Dropdown
+                                            selectedId={selectedVersion}
+                                            options={versionOptions}
+                                            onSelect={handleSelectVersion}
+                                        />
+                                    </FormField>
                                 }
-                            >
-                                <Dropdown
-                                    selectedId={selectedVersion}
-                                    options={versionOptions}
-                                    onSelect={handleSelectVersion}
-                                />
-                            </FormField>
+                                content={
+                                    <FloatingHelper.Content
+                                        body={
+                                            <Box
+                                                direction="vertical"
+                                                gap="12px"
+                                            >
+                                                <Text light>
+                                                    Select the ChatGPT version
+                                                    to use
+                                                </Text>
+                                                <Text light>
+                                                    3.5 (Basic version) provides
+                                                    proficient text generation
+                                                    with a solid foundation of
+                                                    understanding and creativity
+                                                </Text>
+                                                <Text light>
+                                                    4 (Advanced version) offers
+                                                    enhanced understanding, more
+                                                    coherent responses, and an
+                                                    improved ability to provide
+                                                    detailed and accurate
+                                                    information.
+                                                </Text>
+                                            </Box>
+                                        }
+                                        actionText="Next"
+                                        onActionClick={() => {
+                                            handleHelperActionClick();
+                                        }}
+                                    />
+                                }
+                                placement="bottom"
+                            />
                             <Text weight="bold">
                                 {selectedVersion === 0
                                     ? "1-2 tokens per word"
@@ -423,17 +707,105 @@ export const Widget: FC = () => {
                             </Text>
                         </Cell>
                         <Cell span={12}>
-                            <Button
-                                size="medium"
-                                dataHook="gpt-product-generate-button"
-                                onClick={generateButtonHandler}
-                            >
-                                {genButtonLoading ? (
-                                    <Loader size="tiny" />
-                                ) : (
-                                    "Generate Blog Post"
-                                )}
-                            </Button>
+                            <FloatingHelper
+                                opened={isHelperOpen && helperStep === 6}
+                                width={"300px"}
+                                onClose={helperClose}
+                                target={
+                                    <>
+                                        {!warningIsOpen ? (
+                                            <Button
+                                                size="medium"
+                                                dataHook="gpt-product-generate-button"
+                                                onClick={
+                                                    hasPostContent
+                                                        ? showWarning
+                                                        : generateButtonHandler
+                                                }
+                                            >
+                                                {genButtonLoading ? (
+                                                    <Loader size="tiny" />
+                                                ) : (
+                                                    "Generate Blog Post"
+                                                )}
+                                            </Button>
+                                        ) : (
+                                            <SectionHelper appearance="warning">
+                                                <Layout>
+                                                    <Cell span={12}>
+                                                        <Box direction="vertical">
+                                                            <Text>
+                                                                You already have
+                                                                content in your
+                                                                blog.
+                                                            </Text>
+                                                            <Text>
+                                                                On click
+                                                                "Generate"
+                                                                existing text
+                                                                will be
+                                                                overwritten.
+                                                            </Text>
+                                                        </Box>
+                                                    </Cell>
+                                                    <Cell span={12}>
+                                                        <Box
+                                                            direction="horizontal"
+                                                            width={"100%"}
+                                                            gap={"10px"}
+                                                        >
+                                                            <Button
+                                                                onClick={() =>
+                                                                    setWarningIsOpen(
+                                                                        false
+                                                                    )
+                                                                }
+                                                                priority="secondary"
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                            <Button
+                                                                onClick={
+                                                                    generateButtonHandlerWrapper
+                                                                }
+                                                            >
+                                                                {genButtonLoading ? (
+                                                                    <Loader size="tiny" />
+                                                                ) : (
+                                                                    "Generate"
+                                                                )}
+                                                            </Button>
+                                                        </Box>
+                                                    </Cell>
+                                                </Layout>
+                                            </SectionHelper>
+                                        )}
+                                    </>
+                                }
+                                content={
+                                    <FloatingHelper.Content
+                                        body={
+                                            <Box
+                                                direction="vertical"
+                                                gap="12px"
+                                            >
+                                                <Text light>
+                                                    After entering all the
+                                                    information and selecting
+                                                    the desired settings, click
+                                                    on Generate Description
+                                                </Text>
+                                            </Box>
+                                        }
+                                        actionText="Got It"
+                                        onActionClick={() => {
+                                            handleHelperActionClick();
+                                        }}
+                                    />
+                                }
+                                placement="bottom"
+                            />
+                            <Box paddingBottom={"25px"}></Box>
                         </Cell>
                     </Layout>
                 </Box>
