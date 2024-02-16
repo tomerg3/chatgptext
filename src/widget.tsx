@@ -147,24 +147,26 @@ export const Widget: FC = () => {
                 setWarningIsOpen(false);
                 generateButtonHandler({ preventDefault: () => {} });
                 return;
-            } else if (!content && postTitle && postTitle !== "") {
-                setWarningIsOpen(true);
-                return;
-            } else if ((!postTitle || postTitle == "") && content) {
+            } else if((!postTitle || postTitle == "")) {
+                setWarningIsOpen(false);
                 showToast({
                     message:
                         "Please enter the post title to generate the content",
                     type: "error",
                 });
                 return;
+            } else if (postTitle && postTitle !== "" && !content) {
+                setWarningIsOpen(true);
+                return;
             } else {
                 showToast({
-                    message:
-                        "Please enter the post title to generate the content",
+                    message: "Please enter the post title to generate the content",
                     type: "error",
                 });
                 return;
             }
+            
+
         } catch (error) {
             console.log("Error in observerCallback:", error);
         }
