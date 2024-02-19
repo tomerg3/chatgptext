@@ -52,7 +52,6 @@ export const Widget: FC = () => {
     const [draftName, setDraftName] = useState<string>("");
     const [helperStep, setHelperStep] = useState<number>(1);
     const [isHelperOpen, setIsHelperOpen] = useState(true);
-    const [hasPostContent, setHasPostConent] = useState(false);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
 
     const getAppDataRequested = useRef(false);
@@ -109,37 +108,44 @@ export const Widget: FC = () => {
         }
     }, []);
 
+    const [content, setContent] = useState(false);
+
+    useEffect(() => {
+        observeState(async (state: any, envData: any) => {
+            try {
+                const postContent = await state.getPostContent();
+                if (postContent && postContent.nodes) {
+                    (postContent.nodes as any[]).forEach((paragraph) => {
+                        if (
+                            paragraph.type === "PARAGRAPH" &&
+                            paragraph.nodes.length > 0
+                        ) {
+                            const hasNonEmptyText = paragraph.nodes.some(
+                                (node: any) => {
+                                    return (
+                                        node.type === "TEXT" &&
+                                        node.textData.text.trim() !== ""
+                                    );
+                                }
+                            );
+                            if (hasNonEmptyText) {
+                                setContent(false);
+                            } else {
+                                setContent(true);
+                            }
+                        }
+                    })
+                }
+            } catch (error) {
+                console.error("Error checking post content:", error);
+            }
+        });
+    }, []);
+
+    const observerSubscribed = useRef(false);
+
     const observerCallback = async (state: any, envData: any) => {
         try {
-            let content;
-
-            const postContent = await state.getPostContent();
-            console.log("postContent", postContent);
-            if (postContent && postContent.nodes) {
-                (postContent.nodes as any[]).forEach((paragraph) => {
-                    if (
-                        paragraph.type === "PARAGRAPH" &&
-                        paragraph.nodes.length > 0
-                    ) {
-                        const hasNonEmptyText = paragraph.nodes.some(
-                            (node: any) => {
-                                return (
-                                    node.type === "TEXT" &&
-                                    node.textData.text.trim() !== ""
-                                );
-                            }
-                        );
-                        if (hasNonEmptyText) {
-                            content = false;
-                            console.log("content debug false");
-                        } else {
-                            content = true;
-                            console.log("content debu true");
-                        }
-                    }
-                });
-            }
-
             const postTitle = await state.getPostTitle();
             setDraftName(postTitle);
 
@@ -147,11 +153,11 @@ export const Widget: FC = () => {
                 setWarningIsOpen(false);
                 generateButtonHandler({ preventDefault: () => {} });
                 return;
-            } else if((!postTitle || postTitle == "")) {
+            } else if (!postTitle || postTitle == "") {
                 setWarningIsOpen(false);
                 showToast({
                     message:
-                        "Please enter the post title to generate the content",
+                        "Start by entering a Catchy Title so ChatGPT could write the content",
                     type: "error",
                 });
                 return;
@@ -160,13 +166,12 @@ export const Widget: FC = () => {
                 return;
             } else {
                 showToast({
-                    message: "Please enter the post title to generate the content",
+                    message:
+                        "Start by entering a Catchy Title so ChatGPT could write the content",
                     type: "error",
                 });
                 return;
             }
-            
-
         } catch (error) {
             console.log("Error in observerCallback:", error);
         }
@@ -231,7 +236,12 @@ export const Widget: FC = () => {
     };
 
     const generateButton = () => {
-        observeState(observerCallback);
+        if (!observerSubscribed.current) {
+            observeState(observerCallback);
+            observerSubscribed.current = true;
+        } else {
+            observerCallback;
+        }
     };
 
     const generateButtonHandlerWrapper = () => {
@@ -281,13 +291,6 @@ export const Widget: FC = () => {
                         nodes: paragraphs,
                     };
                     console.log("newRichContent", newRichContent);
-                    observeState((state: any, envData: any) => {
-                        const postTitle = state.getPostTitle();
-                        postTitle.then((postTitle: string) => {
-                            setDraftName(postTitle);
-                        });
-                        state.setPostContent(newRichContent);
-                    });
                 }
                 return response.data;
             })
@@ -327,7 +330,7 @@ export const Widget: FC = () => {
     };
 
     const handleHelperActionClick = () => {
-        if (helperStep <= 6) {
+        if (helperStep <= 7) {
             setHelperStep((step) => step + 1);
         } else {
             setIsHelperOpen(false);
@@ -338,7 +341,7 @@ export const Widget: FC = () => {
     };
 
     useEffect(() => {
-        if (isHelperOpen && helperStep === 3) {
+        if (isHelperOpen && helperStep === 4) {
             const voiceDropdown = document.querySelector(
                 '[data-hook="gpt-voice"] input'
             ) as HTMLInputElement;
@@ -348,23 +351,23 @@ export const Widget: FC = () => {
         }
 
         let targetElement;
-        if (helperStep == 1) {
+        if (helperStep == 1 || helperStep == 2) {
             targetElement = document.querySelector(
                 '[data-hook="gpt-additional-details"]'
             );
-        } else if (helperStep == 2) {
+        } else if (helperStep == 3) {
             targetElement = document.querySelector(
                 '[data-hook="gpt-number-words"]'
             );
-        } else if (helperStep == 3) {
-            targetElement = document.querySelector('[data-hook="gpt-voice"]');
         } else if (helperStep == 4) {
+            targetElement = document.querySelector('[data-hook="gpt-voice"]');
+        } else if (helperStep == 5) {
             targetElement = document.querySelector(
                 '[data-hook="gpt-target-audience"]'
             );
-        } else if (helperStep == 5) {
+        } else if (helperStep == 6) {
             targetElement = document.querySelector('[data-hook="gpt-version"]');
-        } else if (helperStep >= 6) {
+        } else if (helperStep >= 7) {
             targetElement = document.querySelector(
                 '[dataHook="gpt-product-generate-button"]'
             );
@@ -455,13 +458,32 @@ export const Widget: FC = () => {
                     <Layout alignItems="center">
                         <Cell span={12}>
                             <FormField
-                                label="Additional Details"
+                                label={
+                                    <FloatingHelper
+                                    opened={
+                                        isHelperOpen && helperStep === 1
+                                    }
+                                    width={"280px"}
+                                    onClose={helperClose}
+                                    target="Additional Details"
+                                    content={
+                                        <FloatingHelper.Content
+                                            body="Start by entering a catchy title for your Blog Post (to the right), it will help ChatGPT create the best content for your post."
+                                            actionText="Next"
+                                            onActionClick={() => {
+                                                handleHelperActionClick();
+                                            }}
+                                        />
+                                    }
+                                    placement="bottom"
+                                />
+                                }
                                 statusMessage={
                                     <FloatingHelper
                                         opened={
-                                            isHelperOpen && helperStep === 1
+                                            isHelperOpen && helperStep === 2
                                         }
-                                        width={"300px"}
+                                        width={"280px"}
                                         onClose={helperClose}
                                         target="Include any information you would like mentioned, or any specific instructions."
                                         content={
@@ -539,9 +561,9 @@ export const Widget: FC = () => {
                                 statusMessage={
                                     <FloatingHelper
                                         opened={
-                                            isHelperOpen && helperStep === 2
+                                            isHelperOpen && helperStep === 3
                                         }
-                                        width={"300px"}
+                                        width={"280px"}
                                         onClose={helperClose}
                                         target={
                                             selectedVersion === 0
@@ -574,9 +596,9 @@ export const Widget: FC = () => {
                                 label={
                                     <FloatingHelper
                                         opened={
-                                            isHelperOpen && helperStep === 3
+                                            isHelperOpen && helperStep === 4
                                         }
-                                        width={"300px"}
+                                        width={"280px"}
                                         onClose={helperClose}
                                         target="Writing Style (Voice)"
                                         content={
@@ -624,9 +646,9 @@ export const Widget: FC = () => {
                                 label={
                                     <FloatingHelper
                                         opened={
-                                            isHelperOpen && helperStep === 4
+                                            isHelperOpen && helperStep === 5
                                         }
-                                        width={"300px"}
+                                        width={"280px"}
                                         onClose={helperClose}
                                         target="Target Audience"
                                         content={
@@ -705,9 +727,9 @@ export const Widget: FC = () => {
                                 label={
                                     <FloatingHelper
                                         opened={
-                                            isHelperOpen && helperStep === 5
+                                            isHelperOpen && helperStep === 6
                                         }
-                                        width={"300px"}
+                                        width={"280px"}
                                         onClose={helperClose}
                                         target="ChatGPT Version"
                                         content={
@@ -772,8 +794,8 @@ export const Widget: FC = () => {
                         </Cell>
                         <Cell span={12}>
                             <FloatingHelper
-                                opened={isHelperOpen && helperStep === 6}
-                                width={"300px"}
+                                opened={isHelperOpen && helperStep === 7}
+                                width={"280px"}
                                 onClose={helperClose}
                                 target={
                                     <>
