@@ -55,7 +55,7 @@ export const Widget: FC = () => {
     const [warningIsOpen, setWarningIsOpen] = useState(false);
 
     const getAppDataRequested = useRef(false);
-
+        
     useEffect(() => {
         if (!getAppDataRequested.current) {
             const search = window.location.search;
@@ -134,7 +134,7 @@ export const Widget: FC = () => {
                                 setContent(true);
                             }
                         }
-                    })
+                    });
                 }
             } catch (error) {
                 console.error("Error checking post content:", error);
@@ -336,6 +336,13 @@ export const Widget: FC = () => {
             setIsHelperOpen(false);
         }
     };
+    const handlePreviousActionClick = () => {
+        if (helperStep <= 7) {
+            setHelperStep((step) => Math.max(1, step - 1));
+        } else {
+            setIsHelperOpen(false);
+        }
+    };
     const helperClose = () => {
         setIsHelperOpen(false);
     };
@@ -460,23 +467,42 @@ export const Widget: FC = () => {
                             <FormField
                                 label={
                                     <FloatingHelper
-                                    opened={
-                                        isHelperOpen && helperStep === 1
-                                    }
-                                    width={"280px"}
-                                    onClose={helperClose}
-                                    target="Additional Details"
-                                    content={
-                                        <FloatingHelper.Content
-                                            body="Start by entering a catchy title for your Blog Post (to the right), it will help ChatGPT create the best content for your post."
-                                            actionText="Next"
-                                            onActionClick={() => {
-                                                handleHelperActionClick();
-                                            }}
-                                        />
-                                    }
-                                    placement="bottom"
-                                />
+                                        opened={
+                                            isHelperOpen && helperStep === 1
+                                        }
+                                        width={"280px"}
+                                        onClose={helperClose}
+                                        target="Additional Details"
+                                        content={
+                                            <FloatingHelper.Content
+                                                body={
+                                                    <Box
+                                                        direction="vertical"
+                                                        gap={"20px"}
+                                                    >
+                                                        <Text light>
+                                                        Start by entering a catchy title for your Blog Post (to the right), it will help ChatGPT create the best content for your post.
+                                                        </Text>
+                                                        <Box
+                                                            direction="horizontal"
+                                                            gap={"20px"}
+                                                        >
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handleHelperActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Next
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                }
+                                            />
+                                        }
+                                        placement="bottom"
+                                    />
                                 }
                                 statusMessage={
                                     <FloatingHelper
@@ -491,7 +517,7 @@ export const Widget: FC = () => {
                                                 body={
                                                     <Box
                                                         direction="vertical"
-                                                        gap="12px"
+                                                        gap="20px"
                                                     >
                                                         <Text light>
                                                             Include any
@@ -535,12 +561,31 @@ export const Widget: FC = () => {
                                                                 </li>
                                                             </ul>
                                                         </Text>
+                                                        <Box
+                                                            direction="horizontal"
+                                                            gap={"20px"}
+                                                        >
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handlePreviousActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Previous
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handleHelperActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Next
+                                                            </Button>
+                                                        </Box>
                                                     </Box>
                                                 }
-                                                actionText="Next"
-                                                onActionClick={() => {
-                                                    handleHelperActionClick();
-                                                }}
                                             />
                                         }
                                         placement="bottom"
@@ -572,11 +617,39 @@ export const Widget: FC = () => {
                                         }
                                         content={
                                             <FloatingHelper.Content
-                                                body="Select the desired length of the description"
-                                                actionText="Next"
-                                                onActionClick={() => {
-                                                    handleHelperActionClick();
-                                                }}
+                                                body={
+                                                    <Box
+                                                        direction="vertical"
+                                                        gap={"20px"}
+                                                    >
+                                                        <Text light>
+                                                        Select the desired length of the description
+                                                        </Text>
+                                                        <Box
+                                                            direction="horizontal"
+                                                            gap={"20px"}
+                                                        >
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handlePreviousActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Previous
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handleHelperActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Next
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                }
                                             />
                                         }
                                         placement="bottom"
@@ -603,11 +676,39 @@ export const Widget: FC = () => {
                                         target="Writing Style (Voice)"
                                         content={
                                             <FloatingHelper.Content
-                                                body="Select the desired writing style (voice) from our existing list, or enter your own"
-                                                actionText="Next"
-                                                onActionClick={() => {
-                                                    handleHelperActionClick();
-                                                }}
+                                                body={
+                                                    <Box
+                                                        direction="vertical"
+                                                        gap={"20px"}
+                                                    >
+                                                        <Text light>
+                                                        Select the desired writing style (voice) from our existing list, or enter your own
+                                                        </Text>
+                                                        <Box
+                                                            direction="horizontal"
+                                                            gap={"20px"}
+                                                        >
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handlePreviousActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Previous
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handleHelperActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Next
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                }
                                             />
                                         }
                                         placement="top"
@@ -656,7 +757,7 @@ export const Widget: FC = () => {
                                                 body={
                                                     <Box
                                                         direction="vertical"
-                                                        gap="12px"
+                                                        gap="20px"
                                                     >
                                                         <Text light>
                                                             You have the option
@@ -676,12 +777,31 @@ export const Widget: FC = () => {
                                                             descriptions (100+
                                                             words)
                                                         </Text>
+                                                        <Box
+                                                            direction="horizontal"
+                                                            gap={"20px"}
+                                                        >
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handlePreviousActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Previous
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handleHelperActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Next
+                                                            </Button>
+                                                        </Box>
                                                     </Box>
                                                 }
-                                                actionText="Next"
-                                                onActionClick={() => {
-                                                    handleHelperActionClick();
-                                                }}
                                             />
                                         }
                                         placement="top"
@@ -737,7 +857,7 @@ export const Widget: FC = () => {
                                                 body={
                                                     <Box
                                                         direction="vertical"
-                                                        gap="12px"
+                                                        gap="20px"
                                                     >
                                                         <Text light>
                                                             Select the ChatGPT
@@ -762,12 +882,31 @@ export const Widget: FC = () => {
                                                             accurate
                                                             information.
                                                         </Text>
+                                                        <Box
+                                                            direction="horizontal"
+                                                            gap={"20px"}
+                                                        >
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handlePreviousActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Previous
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handleHelperActionClick();
+                                                                }}
+                                                                skin="premium-light" size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Next
+                                                            </Button>
+                                                        </Box>
                                                     </Box>
                                                 }
-                                                actionText="Next"
-                                                onActionClick={() => {
-                                                    handleHelperActionClick();
-                                                }}
                                             />
                                         }
                                         placement="top"
@@ -863,20 +1002,39 @@ export const Widget: FC = () => {
                                         body={
                                             <Box
                                                 direction="vertical"
-                                                gap="12px"
+                                                gap={"20px"}
                                             >
                                                 <Text light>
-                                                    After entering all the
+                                                After entering all the
                                                     information and selecting
                                                     the desired settings, click
                                                     on Generate Description
                                                 </Text>
+                                                <Box
+                                                    direction="horizontal"
+                                                    gap={"20px"}
+                                                >
+                                                    <Button
+                                                        onClick={() => {
+                                                            handlePreviousActionClick();
+                                                        }}
+                                                        skin="premium-light" size="small"
+                                                        priority="secondary"
+                                                    >
+                                                        Previous
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => {
+                                                            handleHelperActionClick();
+                                                        }}
+                                                        skin="premium-light" size="small"
+                                                        priority="secondary"
+                                                    >
+                                                        Got It!
+                                                    </Button>
+                                                </Box>
                                             </Box>
                                         }
-                                        actionText="Got It"
-                                        onActionClick={() => {
-                                            handleHelperActionClick();
-                                        }}
                                     />
                                 }
                                 placement="bottom"
