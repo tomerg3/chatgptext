@@ -23,6 +23,7 @@ import {
     Divider,
     FloatingHelper,
     SectionHelper,
+    Popover,
 } from "wix-style-react";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
@@ -55,7 +56,7 @@ export const Widget: FC = () => {
     const [warningIsOpen, setWarningIsOpen] = useState(false);
 
     const getAppDataRequested = useRef(false);
-        
+
     useEffect(() => {
         if (!getAppDataRequested.current) {
             const search = window.location.search;
@@ -385,6 +386,15 @@ export const Widget: FC = () => {
         }
     }, [isHelperOpen, helperStep]);
 
+    useEffect(() => {
+        const popoverArrow = document.querySelector(
+            '[data-hook="popover-arrow"]'
+        );
+        if (popoverArrow) {
+            (popoverArrow as HTMLElement).style.display = "none";
+        }
+    }, []);
+
     if (isAppCrashed) {
         return <CrashedApp />;
     }
@@ -466,14 +476,53 @@ export const Widget: FC = () => {
                         <Cell span={12}>
                             <FormField
                                 label={
-                                    <FloatingHelper
-                                        opened={
-                                            isHelperOpen && helperStep === 1
-                                        }
-                                        width={"280px"}
-                                        onClose={helperClose}
-                                        target="Additional Details"
-                                        content={
+                                    // <FloatingHelper
+                                    //     opened={
+                                    //         isHelperOpen && helperStep === 1
+                                    //     }
+                                    //     width={"280px"}
+                                    //     onClose={helperClose}
+                                    //     target="Additional Details"
+                                    //     content={
+                                    //         <FloatingHelper.Content
+                                    //             body={
+                                    //                 <Box
+                                    //                     direction="vertical"
+                                    //                     gap={"20px"}
+                                    //                 >
+                                    //                     <Text light>
+                                    //                     Start by entering a catchy title for your Blog Post (to the right), it will help ChatGPT create the best content for your post.
+                                    //                     </Text>
+                                    //                     <Box
+                                    //                         direction="horizontal"
+                                    //                         gap={"20px"}
+                                    //                     >
+                                    //                         <Button
+                                    //                             onClick={() => {
+                                    //                                 handleHelperActionClick();
+                                    //                             }}
+                                    //                             skin="premium-light" size="small"
+                                    //                             priority="secondary"
+                                    //                         >
+                                    //                             Next
+                                    //                         </Button>
+                                    //                     </Box>
+                                    //                 </Box>
+                                    //             }
+                                    //         />
+                                    //     }
+                                    //     placement="bottom"
+                                    // />
+
+                                    isHelperOpen &&
+                                    helperStep === 1 && (
+                                        <Box
+                                            padding="20px"
+                                            backgroundColor="D10"
+                                            borderRadius={"10px"}
+                                            position="absolute"
+                                            zIndex={1000}
+                                        >
                                             <FloatingHelper.Content
                                                 body={
                                                     <Box
@@ -481,17 +530,30 @@ export const Widget: FC = () => {
                                                         gap={"20px"}
                                                     >
                                                         <Text light>
-                                                        Start by entering a catchy title for your Blog Post (to the right), it will help ChatGPT create the best content for your post.
+                                                            Start by entering a
+                                                            catchy title for
+                                                            your Blog Post (to
+                                                            the right), it will
+                                                            help ChatGPT create
+                                                            the best content for
+                                                            your post.
                                                         </Text>
                                                         <Box
                                                             direction="horizontal"
                                                             gap={"20px"}
                                                         >
                                                             <Button
+                                                                onClick={helperClose}
+                                                                skin="premium-light"
+                                                                priority="secondary"
+                                                            >
+                                                                Close
+                                                            </Button>
+                                                            <Button
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
                                                                 priority="secondary"
                                                             >
                                                                 Next
@@ -500,9 +562,8 @@ export const Widget: FC = () => {
                                                     </Box>
                                                 }
                                             />
-                                        }
-                                        placement="bottom"
-                                    />
+                                        </Box>
+                                    )
                                 }
                                 statusMessage={
                                     <FloatingHelper
@@ -569,7 +630,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Previous
@@ -578,7 +640,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Next
@@ -623,7 +686,9 @@ export const Widget: FC = () => {
                                                         gap={"20px"}
                                                     >
                                                         <Text light>
-                                                        Select the desired length of the description
+                                                            Select the desired
+                                                            length of the
+                                                            description
                                                         </Text>
                                                         <Box
                                                             direction="horizontal"
@@ -633,7 +698,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Previous
@@ -642,7 +708,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Next
@@ -682,7 +749,11 @@ export const Widget: FC = () => {
                                                         gap={"20px"}
                                                     >
                                                         <Text light>
-                                                        Select the desired writing style (voice) from our existing list, or enter your own
+                                                            Select the desired
+                                                            writing style
+                                                            (voice) from our
+                                                            existing list, or
+                                                            enter your own
                                                         </Text>
                                                         <Box
                                                             direction="horizontal"
@@ -692,7 +763,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Previous
@@ -701,7 +773,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Next
@@ -785,7 +858,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Previous
@@ -794,7 +868,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Next
@@ -890,7 +965,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Previous
@@ -899,7 +975,8 @@ export const Widget: FC = () => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light" size="small"
+                                                                skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Next
@@ -1005,7 +1082,7 @@ export const Widget: FC = () => {
                                                 gap={"20px"}
                                             >
                                                 <Text light>
-                                                After entering all the
+                                                    After entering all the
                                                     information and selecting
                                                     the desired settings, click
                                                     on Generate Description
@@ -1018,7 +1095,8 @@ export const Widget: FC = () => {
                                                         onClick={() => {
                                                             handlePreviousActionClick();
                                                         }}
-                                                        skin="premium-light" size="small"
+                                                        skin="premium-light"
+                                                        size="small"
                                                         priority="secondary"
                                                     >
                                                         Previous
@@ -1027,7 +1105,8 @@ export const Widget: FC = () => {
                                                         onClick={() => {
                                                             handleHelperActionClick();
                                                         }}
-                                                        skin="premium-light" size="small"
+                                                        skin="premium-light"
+                                                        size="small"
                                                         priority="secondary"
                                                     >
                                                         Got It!
