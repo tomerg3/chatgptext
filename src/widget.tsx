@@ -23,8 +23,9 @@ import {
     Divider,
     FloatingHelper,
     SectionHelper,
-    Popover,
+    TextButton,
 } from "wix-style-react";
+import { DismissSmall } from "@wix/wix-ui-icons-common";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
 import { getInstance, getAdminKey } from "../data/utils";
@@ -33,7 +34,7 @@ import {
     InstallationError,
     PageLoader,
 } from "./WarningScreens/WarningScreens";
-import { RichContent } from "ricos-schema";
+import { RichContent, decoration_TypeFromJSON } from "ricos-schema";
 import { Node, Node_Type } from "ricos-schema";
 // import { PremiumSmall } from '@wix/wix-ui-icons-common';
 import { writingOptions, servicesOptions } from "./dropdowns";
@@ -53,7 +54,9 @@ export const Widget: FC = () => {
     const [draftName, setDraftName] = useState<string>("");
     const [helperStep, setHelperStep] = useState<number>(1);
     const [isHelperOpen, setIsHelperOpen] = useState(true);
+    const [content, setContent] = useState(false);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
+    const [observerLoader, setObserverLoader] = useState(false)
 
     const getAppDataRequested = useRef(false);
 
@@ -94,7 +97,7 @@ export const Widget: FC = () => {
                         const remaining = totalTokens - tokensUsage;
                         setRemainingTokens(remaining < 0 ? 0 : remaining);
 
-                        if (data.tutorialFinished == 1) {
+                        if (data.blogTutorialFinished == 1) {
                             setIsHelperOpen(false);
                         } else {
                             setIsHelperOpen(true);
@@ -109,11 +112,14 @@ export const Widget: FC = () => {
         }
     }, []);
 
-    const [content, setContent] = useState(false);
-
     useEffect(() => {
         observeState(async (state: any, envData: any) => {
+            console.log("observer state is runing");
             try {
+                console.log("Getting post title...");
+                const postTitle = await state.getPostTitle();
+                console.log("Post title obtained.");
+                setDraftName(postTitle);
                 const postContent = await state.getPostContent();
                 if (postContent && postContent.nodes) {
                     (postContent.nodes as any[]).forEach((paragraph) => {
@@ -138,32 +144,32 @@ export const Widget: FC = () => {
                     });
                 }
             } catch (error) {
-                console.error("Error checking post content:", error);
+                console.error("Error checking post:", error);
             }
         });
     }, []);
 
-    const observerSubscribed = useRef(false);
-
-    const observerCallback = async (state: any, envData: any) => {
-        try {
-            const postTitle = await state.getPostTitle();
-            setDraftName(postTitle);
-
-            if (postTitle && postTitle !== "" && content) {
+    const generateButton = () => {
+        setObserverLoader(true);
+        
+        setTimeout(() => {
+            if (draftName && draftName !== "" && content) {
                 setWarningIsOpen(false);
                 generateButtonHandler({ preventDefault: () => {} });
+                setObserverLoader(false)
                 return;
-            } else if (!postTitle || postTitle == "") {
+            } else if (!draftName || draftName == "") {
                 setWarningIsOpen(false);
                 showToast({
                     message:
                         "Start by entering a Catchy Title so ChatGPT could write the content",
                     type: "error",
                 });
+                setObserverLoader(false)
                 return;
-            } else if (postTitle && postTitle !== "" && !content) {
+            } else if (draftName && draftName !== "" && !content) {
                 setWarningIsOpen(true);
+                setObserverLoader(false)
                 return;
             } else {
                 showToast({
@@ -171,13 +177,12 @@ export const Widget: FC = () => {
                         "Start by entering a Catchy Title so ChatGPT could write the content",
                     type: "error",
                 });
+                setObserverLoader(false)
                 return;
             }
-        } catch (error) {
-            console.log("Error in observerCallback:", error);
-        }
-    };
-
+        }, 3500)
+    }
+      
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
     const [customStyle, setCustomStyle] = useState<string>("");
@@ -236,22 +241,12 @@ export const Widget: FC = () => {
         setAdditionalInfo(e.target.value);
     };
 
-    const generateButton = () => {
-        if (!observerSubscribed.current) {
-            observeState(observerCallback);
-            observerSubscribed.current = true;
-        } else {
-            observerCallback;
-        }
-    };
-
     const generateButtonHandlerWrapper = () => {
         generateButtonHandler({ preventDefault: () => {} });
     };
 
     const generateButtonHandler = (event: { preventDefault: () => void }) => {
         event.preventDefault();
-
         setGenButtonLoading(true);
         axios
             .post(CONFIG.ajaxUrl, {
@@ -346,6 +341,12 @@ export const Widget: FC = () => {
     };
     const helperClose = () => {
         setIsHelperOpen(false);
+        axios.post(CONFIG.ajaxUrl, {
+            action: "tutorialFinished",
+            instance: getInstance(),
+            k: getAdminKey(),
+            blogTutorialFinished: 1,
+        });
     };
 
     useEffect(() => {
@@ -476,44 +477,6 @@ export const Widget: FC = () => {
                         <Cell span={12}>
                             <FormField
                                 label={
-                                    // <FloatingHelper
-                                    //     opened={
-                                    //         isHelperOpen && helperStep === 1
-                                    //     }
-                                    //     width={"280px"}
-                                    //     onClose={helperClose}
-                                    //     target="Additional Details"
-                                    //     content={
-                                    //         <FloatingHelper.Content
-                                    //             body={
-                                    //                 <Box
-                                    //                     direction="vertical"
-                                    //                     gap={"20px"}
-                                    //                 >
-                                    //                     <Text light>
-                                    //                     Start by entering a catchy title for your Blog Post (to the right), it will help ChatGPT create the best content for your post.
-                                    //                     </Text>
-                                    //                     <Box
-                                    //                         direction="horizontal"
-                                    //                         gap={"20px"}
-                                    //                     >
-                                    //                         <Button
-                                    //                             onClick={() => {
-                                    //                                 handleHelperActionClick();
-                                    //                             }}
-                                    //                             skin="premium-light" size="small"
-                                    //                             priority="secondary"
-                                    //                         >
-                                    //                             Next
-                                    //                         </Button>
-                                    //                     </Box>
-                                    //                 </Box>
-                                    //             }
-                                    //         />
-                                    //     }
-                                    //     placement="bottom"
-                                    // />
-
                                     isHelperOpen &&
                                     helperStep === 1 && (
                                         <Box
@@ -521,8 +484,21 @@ export const Widget: FC = () => {
                                             backgroundColor="D10"
                                             borderRadius={"10px"}
                                             position="absolute"
+                                            top="-10px"
                                             zIndex={1000}
                                         >
+                                            <Box
+                                                position="absolute"
+                                                top="10px"
+                                                right="10px"
+                                            >
+                                                <TextButton
+                                                    onClick={helperClose}
+                                                    skin="light"
+                                                >
+                                                    <DismissSmall />
+                                                </TextButton>
+                                            </Box>
                                             <FloatingHelper.Content
                                                 body={
                                                     <Box
@@ -542,13 +518,6 @@ export const Widget: FC = () => {
                                                             direction="horizontal"
                                                             gap={"20px"}
                                                         >
-                                                            <Button
-                                                                onClick={helperClose}
-                                                                skin="premium-light"
-                                                                priority="secondary"
-                                                            >
-                                                                Close
-                                                            </Button>
                                                             <Button
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
@@ -1021,7 +990,7 @@ export const Widget: FC = () => {
                                                 dataHook="gpt-product-generate-button"
                                                 onClick={generateButton}
                                             >
-                                                {genButtonLoading ? (
+                                                {(genButtonLoading || observerLoader) ? (
                                                     <Loader size="tiny" />
                                                 ) : (
                                                     "Generate Blog Post"
@@ -1061,7 +1030,7 @@ export const Widget: FC = () => {
                                                                     generateButtonHandlerWrapper
                                                                 }
                                                             >
-                                                                {genButtonLoading ? (
+                                                                {(genButtonLoading || observerLoader) ? (
                                                                     <Loader size="tiny" />
                                                                 ) : (
                                                                     "Continue"
