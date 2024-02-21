@@ -1,8 +1,6 @@
-axios.defaults.headers.post["Content-Type"] =
-    "application/x-www-form-urlencoded";
-import { observeState } from "@wix/dashboard-sdk";
-import { showToast } from "@wix/dashboard-sdk";
+axios.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
 import axios from "axios";
+import { showToast, observeState } from "@wix/dashboard-sdk";
 import { FC, useEffect, useState, useRef } from "react";
 import {
     Card,
@@ -29,14 +27,9 @@ import { DismissSmall } from "@wix/wix-ui-icons-common";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
 import { getInstance, getAdminKey } from "../data/utils";
-import {
-    CrashedApp,
-    InstallationError,
-    PageLoader,
-} from "./WarningScreens/WarningScreens";
-import { RichContent, decoration_TypeFromJSON } from "ricos-schema";
-import { Node, Node_Type } from "ricos-schema";
-// import { PremiumSmall } from '@wix/wix-ui-icons-common';
+import { CrashedApp, InstallationError, PageLoader} from "./WarningScreens/WarningScreens";
+import { RichContent } from "ricos-schema";
+import { Node_Type } from "ricos-schema";
 import { writingOptions, servicesOptions } from "./dropdowns";
 
 export interface DashboardWidgetProps {
@@ -49,15 +42,32 @@ export const Widget: FC = () => {
     const [planType, setPlanType] = useState<string>("");
     const [remainingTokens, setRemainingTokens] = useState<number>();
     const [totalTokens, setTotalTokens] = useState<number>();
-    const [genButtonLoading, setGenButtonLoading] = useState(false);
     const [wordsNum, setWordsNum] = useState<number>(500);
     const [draftName, setDraftName] = useState<string>("");
-    const [title, setTitle] = useState<string>("");
     const [helperStep, setHelperStep] = useState<number>(1);
     const [isHelperOpen, setIsHelperOpen] = useState(true);
     const [content, setContent] = useState(false);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
     const [observerLoader, setObserverLoader] = useState(false);
+    const [titleHandlerLoader, setTitleHandlerLoader] = useState(false)
+
+    const [additionalInfo, setAdditionalInfo] = useState("");
+    const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
+    const [customStyle, setCustomStyle] = useState<string>("");
+    const writingStylesOptions = writingOptions;
+
+    const [selectedVersion, setSelectedVersion] = useState<number>(0);
+    const versionOptions = [
+        { id: 0, value: "3.5: Basic Version" },
+        { id: 1, value: "4: Advanced Version" },
+    ];
+
+    const [customAudience, setCustomAudience] = useState<string>("");
+    const [selectedOptions, setSelectedOptions] = useState<number[]>([0]);
+    const serviceOptions = servicesOptions.map((option) => ({
+        ...option,
+        disabled: option.id === 0 ? selectedOptions.length > 0 : false,
+    }));
 
     const getAppDataRequested = useRef(false);
 
@@ -114,14 +124,10 @@ export const Widget: FC = () => {
     }, []);
 
     useEffect(() => {
-        observeState(async (state: any, envData: any) => {
-            console.log("observer state is runing");
+        observeState(async (state: any, _envData: any) => {
             try {
-                console.log("Getting post title...");
                 const postTitle = await state.getPostTitle();
-                console.log("Post title obtained.");
                 setDraftName(postTitle);
-                setTitle(postTitle);
                 const postContent = await state.getPostContent();
                 if (postContent && postContent.nodes) {
                     (postContent.nodes as any[]).forEach((paragraph) => {
@@ -151,13 +157,10 @@ export const Widget: FC = () => {
         });
     }, []);
 
-    const [titleHandlerLoader, setTitleHandlerLoader] = useState(false)
-
     const generateButton = () => {
         setObserverLoader(true);
         new Promise<void>((resolve) => {
             setTimeout(() => {
-                console.log("promise timeout")
                 resolve();
             }, 3500);
         })
@@ -167,7 +170,6 @@ export const Widget: FC = () => {
     };
 
     const titleHandler = () => {
-        console.log("then - ", draftName)
         if (draftName && draftName !== "" && content) {
             setWarningIsOpen(false);
             generateButtonHandler({ preventDefault: () => {} });
@@ -202,24 +204,6 @@ export const Widget: FC = () => {
             setTitleHandlerLoader(false);
         }
     }, [titleHandlerLoader])
-
-    const [additionalInfo, setAdditionalInfo] = useState("");
-    const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
-    const [customStyle, setCustomStyle] = useState<string>("");
-    const writingStylesOptions = writingOptions;
-
-    const [selectedVersion, setSelectedVersion] = useState<number>(0);
-    const versionOptions = [
-        { id: 0, value: "3.5: Basic Version" },
-        { id: 1, value: "4: Advanced Version" },
-    ];
-
-    const [customAudience, setCustomAudience] = useState<string>("");
-    const [selectedOptions, setSelectedOptions] = useState<number[]>([0]);
-    const serviceOptions = servicesOptions.map((option) => ({
-        ...option,
-        disabled: option.id === 0 ? selectedOptions.length > 0 : false,
-    }));
 
     useEffect(() => {
         if (selectedOptions.length > 1 && selectedOptions.includes(0)) {
@@ -267,7 +251,7 @@ export const Widget: FC = () => {
 
     const generateButtonHandler = (event: { preventDefault: () => void }) => {
         event.preventDefault();
-        setGenButtonLoading(true);
+        setObserverLoader(true);
         axios
             .post(CONFIG.ajaxUrl, {
                 instance: getInstance(),
@@ -330,7 +314,7 @@ export const Widget: FC = () => {
                         type: "success",
                     });
                 }
-                setGenButtonLoading(false);
+                setObserverLoader(false);
                 setWarningIsOpen(false);
             })
             .catch((error) => {
@@ -340,7 +324,7 @@ export const Widget: FC = () => {
                     type: "error",
                 });
                 console.log("error genrating button:", error);
-                setGenButtonLoading(false);
+                setObserverLoader(false);
                 setWarningIsOpen(false);
             });
     };
@@ -1010,8 +994,7 @@ export const Widget: FC = () => {
                                                 dataHook="gpt-product-generate-button"
                                                 onClick={generateButton}
                                             >
-                                                {genButtonLoading ||
-                                                observerLoader ? (
+                                                {observerLoader ? (
                                                     <Loader size="tiny" />
                                                 ) : (
                                                     "Generate Blog Post"
@@ -1051,8 +1034,7 @@ export const Widget: FC = () => {
                                                                     generateButtonHandlerWrapper
                                                                 }
                                                             >
-                                                                {genButtonLoading ||
-                                                                observerLoader ? (
+                                                                {observerLoader ? (
                                                                     <Loader size="tiny" />
                                                                 ) : (
                                                                     "Continue"
