@@ -151,46 +151,57 @@ export const Widget: FC = () => {
         });
     }, []);
 
+    const [titleHandlerLoader, setTitleHandlerLoader] = useState(false)
+
     const generateButton = () => {
         setObserverLoader(true);
+        new Promise<void>((resolve) => {
+            setTimeout(() => {
+                console.log("promise timeout")
+                resolve();
+            }, 3500);
+        })
+        .then(() => {
+            setTitleHandlerLoader(true);
+        })
     };
 
-    useEffect(() => {
-        console.log("debug first call ")
-        if(observerLoader){
-            setTimeout(() => {
-                console.log("draftName inside tineout debug", draftName);
-        
-                if (draftName && draftName !== "" && content) {
-                    setWarningIsOpen(false);
-                    generateButtonHandler({ preventDefault: () => {} });
-                    setObserverLoader(false);
-                    return;
-                } else if (!draftName || draftName == "") {
-                    setWarningIsOpen(false);
-                    showToast({
-                        message:
-                            "Start by entering a Catchy Title so ChatGPT could write the content",
-                        type: "error",
-                    });
-                    setObserverLoader(false);
-                    return;
-                } else if (draftName && draftName !== "" && !content) {
-                    setWarningIsOpen(true);
-                    setObserverLoader(false);
-                    return;
-                } else {
-                    showToast({
-                        message:
-                            "Start by entering a Catchy Title so ChatGPT could write the content",
-                        type: "error",
-                    });
-                    setObserverLoader(false);
-                    return;
-                }
-            }, 3500);
+    const titleHandler = () => {
+        console.log("then - ", draftName)
+        if (draftName && draftName !== "" && content) {
+            setWarningIsOpen(false);
+            generateButtonHandler({ preventDefault: () => {} });
+            setObserverLoader(false);
+            return;
+        } else if (!draftName || draftName == "") {
+            setWarningIsOpen(false);
+            showToast({
+                message:
+                    "Start by entering a Catchy Title so ChatGPT could write the content",
+                type: "error",
+            });
+            setObserverLoader(false);
+            return;
+        } else if (draftName && draftName !== "" && !content) {
+            setWarningIsOpen(true);
+            setObserverLoader(false);
+            return;
+        } else {
+            showToast({
+                message: "Start by entering a Catchy Title so ChatGPT could write the content",
+                type: "error",
+            });
+            setObserverLoader(false);
+            return;
         }
-    }, [draftName])
+    }
+
+    useEffect(() => {
+        if(titleHandlerLoader){
+            titleHandler();
+            setTitleHandlerLoader(false);
+        }
+    }, [titleHandlerLoader])
 
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
