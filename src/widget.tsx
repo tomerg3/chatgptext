@@ -346,10 +346,7 @@ export const Widget: FC = () => {
     const helperClose = () => {
         setIsHelperOpen(false);
         axios.post(CONFIG.ajaxUrl, {
-            action: "tutorialFinished",
-            instance: getInstance(),
-            k: getAdminKey(),
-            blogTutorialFinished: 1,
+            action: "blogTutorialFinished"
         });
     };
 
