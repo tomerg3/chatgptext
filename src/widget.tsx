@@ -29,7 +29,7 @@ import CONFIG from "../data/app-config";
 import { getInstance, getAdminKey } from "../data/utils";
 import { CrashedApp, InstallationError, PageLoader} from "./WarningScreens/WarningScreens";
 import { RichContent } from "ricos-schema";
-import { Node_Type } from "ricos-schema";
+import { Node, Node_Type } from "ricos-schema";
 import { writingOptions, servicesOptions } from "./dropdowns";
 
 export interface DashboardWidgetProps {
@@ -46,7 +46,7 @@ export const Widget: FC = () => {
     const [draftName, setDraftName] = useState<string>("");
     const [helperStep, setHelperStep] = useState<number>(1);
     const [isHelperOpen, setIsHelperOpen] = useState(true);
-    const [content, setContent] = useState(false);
+    const [content, setContent] = useState(true);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
     const [observerLoader, setObserverLoader] = useState(false);
     const [titleHandlerLoader, setTitleHandlerLoader] = useState(false)
@@ -173,7 +173,6 @@ export const Widget: FC = () => {
         if (draftName && draftName !== "" && content) {
             setWarningIsOpen(false);
             generateButtonHandler({ preventDefault: () => {} });
-            setObserverLoader(false);
             return;
         } else if (!draftName || draftName == "") {
             setWarningIsOpen(false);
@@ -291,6 +290,12 @@ export const Widget: FC = () => {
                         nodes: paragraphs,
                     };
                     console.log("newRichContent", newRichContent);
+
+                    observeState((state: any, _envData: any) => {
+                        state.setPostContent(newRichContent);
+                    });
+
+                    setObserverLoader(false);
                 }
                 return response.data;
             })
@@ -314,7 +319,6 @@ export const Widget: FC = () => {
                         type: "success",
                     });
                 }
-                setObserverLoader(false);
                 setWarningIsOpen(false);
             })
             .catch((error) => {
