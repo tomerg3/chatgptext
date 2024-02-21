@@ -56,7 +56,7 @@ export const Widget: FC = () => {
     const [isHelperOpen, setIsHelperOpen] = useState(true);
     const [content, setContent] = useState(false);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
-    const [observerLoader, setObserverLoader] = useState(false)
+    const [observerLoader, setObserverLoader] = useState(false);
 
     const getAppDataRequested = useRef(false);
 
@@ -149,40 +149,51 @@ export const Widget: FC = () => {
         });
     }, []);
 
+    let timeoutId: number | undefined;
+
     const generateButton = () => {
         setObserverLoader(true);
+    };
+
+    useEffect(() => {
+        console.log("draftName in useEffect debug", draftName);
+
+        if(observerLoader){
+            generateButton;
+            timeoutId = setTimeout(() => {
+                console.log("draftName inside tineout debug", draftName);
         
-        setTimeout(() => {
-            if (draftName && draftName !== "" && content) {
-                setWarningIsOpen(false);
-                generateButtonHandler({ preventDefault: () => {} });
-                setObserverLoader(false)
-                return;
-            } else if (!draftName || draftName == "") {
-                setWarningIsOpen(false);
-                showToast({
-                    message:
-                        "Start by entering a Catchy Title so ChatGPT could write the content",
-                    type: "error",
-                });
-                setObserverLoader(false)
-                return;
-            } else if (draftName && draftName !== "" && !content) {
-                setWarningIsOpen(true);
-                setObserverLoader(false)
-                return;
-            } else {
-                showToast({
-                    message:
-                        "Start by entering a Catchy Title so ChatGPT could write the content",
-                    type: "error",
-                });
-                setObserverLoader(false)
-                return;
-            }
-        }, 3500)
-    }
-      
+                if (draftName && draftName !== "" && content) {
+                    setWarningIsOpen(false);
+                    generateButtonHandler({ preventDefault: () => {} });
+                    setObserverLoader(false);
+                    return;
+                } else if (!draftName || draftName == "") {
+                    setWarningIsOpen(false);
+                    showToast({
+                        message:
+                            "Start by entering a Catchy Title so ChatGPT could write the content",
+                        type: "error",
+                    });
+                    setObserverLoader(false);
+                    return;
+                } else if (draftName && draftName !== "" && !content) {
+                    setWarningIsOpen(true);
+                    setObserverLoader(false);
+                    return;
+                } else {
+                    showToast({
+                        message:
+                            "Start by entering a Catchy Title so ChatGPT could write the content",
+                        type: "error",
+                    });
+                    setObserverLoader(false);
+                    return;
+                }
+            }, 3500);
+        }
+    }, [draftName])
+
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
     const [customStyle, setCustomStyle] = useState<string>("");
@@ -990,7 +1001,8 @@ export const Widget: FC = () => {
                                                 dataHook="gpt-product-generate-button"
                                                 onClick={generateButton}
                                             >
-                                                {(genButtonLoading || observerLoader) ? (
+                                                {genButtonLoading ||
+                                                observerLoader ? (
                                                     <Loader size="tiny" />
                                                 ) : (
                                                     "Generate Blog Post"
@@ -1030,7 +1042,8 @@ export const Widget: FC = () => {
                                                                     generateButtonHandlerWrapper
                                                                 }
                                                             >
-                                                                {(genButtonLoading || observerLoader) ? (
+                                                                {genButtonLoading ||
+                                                                observerLoader ? (
                                                                     <Loader size="tiny" />
                                                                 ) : (
                                                                     "Continue"
