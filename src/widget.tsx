@@ -52,6 +52,7 @@ export const Widget: FC = () => {
     const [genButtonLoading, setGenButtonLoading] = useState(false);
     const [wordsNum, setWordsNum] = useState<number>(500);
     const [draftName, setDraftName] = useState<string>("");
+    const [title, setTitle] = useState<string>("");
     const [helperStep, setHelperStep] = useState<number>(1);
     const [isHelperOpen, setIsHelperOpen] = useState(true);
     const [content, setContent] = useState(false);
@@ -120,6 +121,7 @@ export const Widget: FC = () => {
                 const postTitle = await state.getPostTitle();
                 console.log("Post title obtained.");
                 setDraftName(postTitle);
+                setTitle(postTitle);
                 const postContent = await state.getPostContent();
                 if (postContent && postContent.nodes) {
                     (postContent.nodes as any[]).forEach((paragraph) => {
@@ -149,18 +151,14 @@ export const Widget: FC = () => {
         });
     }, []);
 
-    let timeoutId: number | undefined;
-
     const generateButton = () => {
         setObserverLoader(true);
-        setDraftName(draftName);
     };
 
     useEffect(() => {
         console.log("debug first call ")
         if(observerLoader){
-            generateButton;
-            timeoutId = setTimeout(() => {
+            setTimeout(() => {
                 console.log("draftName inside tineout debug", draftName);
         
                 if (draftName && draftName !== "" && content) {
