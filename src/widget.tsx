@@ -153,11 +153,11 @@ export const Widget: FC = () => {
 
     const generateButton = () => {
         setObserverLoader(true);
+        setDraftName(draftName);
     };
 
     useEffect(() => {
-        console.log("draftName in useEffect debug", draftName);
-
+        console.log("debug first call ")
         if(observerLoader){
             generateButton;
             timeoutId = setTimeout(() => {
