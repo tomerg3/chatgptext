@@ -1,7 +1,8 @@
-axios.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded";
+axios.defaults.headers.post["Content-Type"] =
+    "application/x-www-form-urlencoded";
 import axios from "axios";
-import { showToast, observeState } from "@wix/dashboard-sdk";
-import { FC, useEffect, useState, useRef } from "react";
+import { showToast } from "@wix/dashboard-sdk";
+import { FC, useEffect, useState } from "react";
 import {
     Card,
     FormField,
@@ -21,22 +22,21 @@ import {
     Divider,
     FloatingHelper,
     SectionHelper,
-    TextButton,
 } from "wix-style-react";
-import { DismissSmall } from "@wix/wix-ui-icons-common";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
 import { getInstance, getAdminKey } from "../data/utils";
-import { CrashedApp, InstallationError, PageLoader} from "./WarningScreens/WarningScreens";
+import {
+    CrashedApp,
+    InstallationError,
+    PageLoader,
+} from "./WarningScreens/WarningScreens";
 import { RichContent } from "ricos-schema";
-import { Node, Node_Type } from "ricos-schema";
+import { Node_Type } from "ricos-schema";
 import { writingOptions, servicesOptions } from "./dropdowns";
+import { DashboardWidgetProps } from "./blogApp";
 
-export interface DashboardWidgetProps {
-    onLoaded?: () => void;
-}
-
-export const Widget: FC = () => {
+export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [isAppCrashed, setIsAppCrashed] = useState(false);
     const [appData, setAppData] = useState(false);
     const [planType, setPlanType] = useState<string>("");
@@ -49,7 +49,6 @@ export const Widget: FC = () => {
     const [content, setContent] = useState(true);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
     const [observerLoader, setObserverLoader] = useState(false);
-    const [titleHandlerLoader, setTitleHandlerLoader] = useState(false)
 
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<number>(1);
@@ -69,66 +68,60 @@ export const Widget: FC = () => {
         disabled: option.id === 0 ? selectedOptions.length > 0 : false,
     }));
 
-    const getAppDataRequested = useRef(false);
-
     useEffect(() => {
-        if (!getAppDataRequested.current) {
-            const search = window.location.search;
-            const params = new URLSearchParams(search);
-            const instance = params.get("instance");
+        const search = window.location.search;
+        const params = new URLSearchParams(search);
+        const instance = params.get("instance");
 
-            axios
-                .post(CONFIG.ajaxUrl, {
-                    instance: instance,
-                    action: "getAppData",
-                    k: getAdminKey(),
-                })
-                .then((response) => {
-                    return response.data;
-                })
-                .then((data) => {
-                    if (!data || typeof data.instance_id === "undefined") {
-                        setIsAppCrashed(true);
+        axios
+            .post(CONFIG.ajaxUrl, {
+                instance: instance,
+                action: "getAppData",
+                k: getAdminKey(),
+            })
+            .then((response) => {
+                return response.data;
+            })
+            .then((data) => {
+                if (!data || typeof data.instance_id === "undefined") {
+                    setIsAppCrashed(true);
+                } else {
+                    setAppData(data);
+                    setPlanType(
+                        data.plan
+                            ? data.plan.charAt(0).toUpperCase() +
+                                  data.plan.slice(1).toLowerCase()
+                            : "Free"
+                    );
+
+                    const totalTokens = parseInt(
+                        data.totalTokens.replace(/,/g, "")
+                    );
+                    setTotalTokens(totalTokens);
+                    const tokensUsage = parseInt(
+                        data.tokensUsage.replace(/,/g, "")
+                    );
+                    const remaining = totalTokens - tokensUsage;
+                    setRemainingTokens(remaining < 0 ? 0 : remaining);
+
+                    if (data.blogTutorialFinished == 1) {
+                        setIsHelperOpen(false);
                     } else {
-                        setAppData(data);
-                        setPlanType(
-                            data.plan
-                                ? data.plan.charAt(0).toUpperCase() +
-                                      data.plan.slice(1).toLowerCase()
-                                : "Free"
-                        );
-
-                        const totalTokens = parseInt(
-                            data.totalTokens.replace(/,/g, "")
-                        );
-                        setTotalTokens(totalTokens);
-                        const tokensUsage = parseInt(
-                            data.tokensUsage.replace(/,/g, "")
-                        );
-                        const remaining = totalTokens - tokensUsage;
-                        setRemainingTokens(remaining < 0 ? 0 : remaining);
-
-                        if (data.blogTutorialFinished == 1) {
-                            setIsHelperOpen(false);
-                        } else {
-                            setIsHelperOpen(true);
-                        }
+                        setIsHelperOpen(true);
                     }
-                })
-                .catch((error) => {
-                    console.log("error from receiveing appData", error);
-                });
-
-            getAppDataRequested.current = true;
-        }
+                }
+            })
+            .catch((error) => {
+                console.log("error from receiveing appData", error);
+            });
     }, []);
 
     useEffect(() => {
-        observeState(async (state: any, _envData: any) => {
+        (async () => {
             try {
-                const postTitle = await state.getPostTitle();
+                const postTitle = await props.getPostTitle();
                 setDraftName(postTitle);
-                const postContent = await state.getPostContent();
+                const postContent = await props.getPostContent();
                 if (postContent && postContent.nodes) {
                     (postContent.nodes as any[]).forEach((paragraph) => {
                         if (
@@ -152,24 +145,12 @@ export const Widget: FC = () => {
                     });
                 }
             } catch (error) {
-                console.error("Error checking post:", error);
+                console.error("Failed to load content:", error);
             }
-        });
+        })();
     }, []);
 
     const generateButton = () => {
-        setObserverLoader(true);
-        new Promise<void>((resolve) => {
-            setTimeout(() => {
-                resolve();
-            }, 3500);
-        })
-        .then(() => {
-            setTitleHandlerLoader(true);
-        })
-    };
-
-    const titleHandler = () => {
         if (draftName && draftName !== "" && content) {
             setWarningIsOpen(false);
             generateButtonHandler({ preventDefault: () => {} });
@@ -189,20 +170,14 @@ export const Widget: FC = () => {
             return;
         } else {
             showToast({
-                message: "Start by entering a Catchy Title so ChatGPT could write the content",
+                message:
+                    "Start by entering a Catchy Title so ChatGPT could write the content",
                 type: "error",
             });
             setObserverLoader(false);
             return;
         }
-    }
-
-    useEffect(() => {
-        if(titleHandlerLoader){
-            titleHandler();
-            setTitleHandlerLoader(false);
-        }
-    }, [titleHandlerLoader])
+    };
 
     useEffect(() => {
         if (selectedOptions.length > 1 && selectedOptions.includes(0)) {
@@ -289,11 +264,9 @@ export const Widget: FC = () => {
                     const newRichContent: RichContent = {
                         nodes: paragraphs,
                     };
-                    console.log("newRichContent", newRichContent);
 
-                    observeState((state: any, _envData: any) => {
-                        state.setPostContent(newRichContent);
-                    });
+                    props.setPostContent(newRichContent);
+                    props.setPostTitle(draftName);
 
                     setObserverLoader(false);
                 }
@@ -367,16 +340,14 @@ export const Widget: FC = () => {
         }
 
         let targetElement;
-        if (helperStep == 1 || helperStep == 2) {
+        if (helperStep == 2) {
             targetElement = document.querySelector(
                 '[data-hook="gpt-additional-details"]'
             );
-        } else if (helperStep == 3) {
+        } else if (helperStep == 3 || helperStep == 4) {
             targetElement = document.querySelector(
                 '[data-hook="gpt-number-words"]'
             );
-        } else if (helperStep == 4) {
-            targetElement = document.querySelector('[data-hook="gpt-voice"]');
         } else if (helperStep == 5) {
             targetElement = document.querySelector(
                 '[data-hook="gpt-target-audience"]'
@@ -483,44 +454,23 @@ export const Widget: FC = () => {
                     <Layout alignItems="center">
                         <Cell span={12}>
                             <FormField
-                                label={
-                                    isHelperOpen &&
-                                    helperStep === 1 && (
-                                        <Box
-                                            padding="20px"
-                                            backgroundColor="D10"
-                                            borderRadius={"10px"}
-                                            position="absolute"
-                                            top="-10px"
-                                            zIndex={1000}
-                                        >
-                                            <Box
-                                                position="absolute"
-                                                top="10px"
-                                                right="10px"
-                                            >
-                                                <TextButton
-                                                    onClick={helperClose}
-                                                    skin="light"
-                                                >
-                                                    <DismissSmall />
-                                                </TextButton>
-                                            </Box>
+                                label="Blog Title"
+                                statusMessage={
+                                    <FloatingHelper
+                                        opened={
+                                            isHelperOpen && helperStep === 1
+                                        }
+                                        width={"280px"}
+                                        onClose={helperClose}
+                                        target="Blog title status message."
+                                        content={
                                             <FloatingHelper.Content
                                                 body={
                                                     <Box
                                                         direction="vertical"
-                                                        gap={"20px"}
+                                                        gap="20px"
                                                     >
-                                                        <Text light>
-                                                            Start by entering a
-                                                            catchy title for
-                                                            your Blog Post (to
-                                                            the right), it will
-                                                            help ChatGPT create
-                                                            the best content for
-                                                            your post.
-                                                        </Text>
+                                                        <Text light>Title</Text>
                                                         <Box
                                                             direction="horizontal"
                                                             gap={"20px"}
@@ -530,6 +480,7 @@ export const Widget: FC = () => {
                                                                     handleHelperActionClick();
                                                                 }}
                                                                 skin="premium-light"
+                                                                size="small"
                                                                 priority="secondary"
                                                             >
                                                                 Next
@@ -538,9 +489,23 @@ export const Widget: FC = () => {
                                                     </Box>
                                                 }
                                             />
-                                        </Box>
-                                    )
+                                        }
+                                        placement="bottom"
+                                    />
                                 }
+                            >
+                                <Input
+                                    value={draftName}
+                                    onChange={(e) =>
+                                        setDraftName(e.target.value)
+                                    }
+                                    placeholder="Enter Blog Title"
+                                />
+                            </FormField>
+                        </Cell>
+                        <Cell span={12}>
+                            <FormField
+                                label="Additional Information"
                                 statusMessage={
                                     <FloatingHelper
                                         opened={
@@ -730,6 +695,7 @@ export const Widget: FC = () => {
                                                             (voice) from our
                                                             existing list, or
                                                             enter your own
+                                                            custom voice.
                                                         </Text>
                                                         <Box
                                                             direction="horizontal"
@@ -820,7 +786,7 @@ export const Widget: FC = () => {
                                                             lifestyles
                                                         </Text>
                                                         <Text light>
-                                                            * Selection a Target
+                                                            * Selecting a Target
                                                             Audience is useful
                                                             for longer
                                                             descriptions (100+
@@ -1061,7 +1027,7 @@ export const Widget: FC = () => {
                                                     After entering all the
                                                     information and selecting
                                                     the desired settings, click
-                                                    on Generate Description
+                                                    on Generate Blog Post
                                                 </Text>
                                                 <Box
                                                     direction="horizontal"
