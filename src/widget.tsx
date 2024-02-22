@@ -448,7 +448,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     <Layout alignItems="center">
                         <Cell span={12}>
                             <FormField
-                                label="Blog Title"
+                                label="Blog Post Title"
                                 statusMessage={
                                     <FloatingHelper
                                         opened={
@@ -456,7 +456,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         }
                                         width={"280px"}
                                         onClose={helperClose}
-                                        target="Blog title status message."
+                                        target="Start by entering a Blog post title."
                                         content={
                                             <FloatingHelper.Content
                                                 body={
@@ -464,7 +464,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
-                                                        <Text size="small" light>Title</Text>
+                                                        <Text size="small" light>Start by entering a Blog post title</Text>
                                                         <Box
                                                             direction="horizontal"
                                                             gap={"20px"}
