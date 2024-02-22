@@ -344,17 +344,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             targetElement = document.querySelector(
                 '[data-hook="gpt-additional-details"]'
             );
-        } else if (helperStep == 3 || helperStep == 4) {
+        } else if (helperStep == 2 || helperStep == 3 || helperStep == 4 || helperStep == 5 || helperStep == 6) {
             targetElement = document.querySelector(
                 '[data-hook="gpt-number-words"]'
             );
-        } else if (helperStep == 5) {
-            targetElement = document.querySelector(
-                '[data-hook="gpt-target-audience"]'
-            );
-        } else if (helperStep == 6) {
-            targetElement = document.querySelector('[data-hook="gpt-version"]');
-        } else if (helperStep >= 7) {
+        }  else if (helperStep >= 7) {
             targetElement = document.querySelector(
                 '[dataHook="gpt-product-generate-button"]'
             );
@@ -470,7 +464,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
-                                                        <Text light>Title</Text>
+                                                        <Text size="small" light>Title</Text>
                                                         <Box
                                                             direction="horizontal"
                                                             gap={"20px"}
@@ -521,7 +515,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             Include any
                                                             information you
                                                             would like
@@ -529,7 +523,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                             specific
                                                             instructions.
                                                         </Text>
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             For Example:
                                                             <br />
                                                             <ul>
@@ -626,7 +620,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap={"20px"}
                                                     >
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             Select the desired
                                                             length of the
                                                             description
@@ -663,7 +657,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         placement="bottom"
                                     />
                                 }
-                                data-hook="gpt-number-words"
+                                dataHook="gpt-number-words"
                             >
                                 <NumberInput
                                     value={wordsNum}
@@ -689,7 +683,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap={"20px"}
                                                     >
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             Select the desired
                                                             writing style
                                                             (voice) from our
@@ -774,7 +768,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             You have the option
                                                             to select one or
                                                             more target
@@ -785,7 +779,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                             preferences, and
                                                             lifestyles
                                                         </Text>
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             * Selecting a Target
                                                             Audience is useful
                                                             for longer
@@ -825,7 +819,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                     />
                                 }
                                 statusMessage="Select one or more target audience for tailored content that addresses their specific needs, preferences, and lifestyles."
-                                data-hook="gpt-target-audience"
+                                dataHook="gpt-target-audience"
                             >
                                 <MultiSelectCheckbox
                                     options={serviceOptions}
@@ -876,11 +870,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             Select the ChatGPT
                                                             version to use
                                                         </Text>
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             3.5 (Basic version)
                                                             provides proficient
                                                             text generation with
@@ -888,7 +882,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                             of understanding and
                                                             creativity
                                                         </Text>
-                                                        <Text light>
+                                                        <Text size="small" light>
                                                             4 (Advanced version)
                                                             offers enhanced
                                                             understanding, more
@@ -936,7 +930,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         ? "GPT-3.5 provides proficient text generation with a solid foundation of understanding and creativity."
                                         : "GPT-4 offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information."
                                 }
-                                data-hook="gpt-version"
+                                dataHook="gpt-version"
                             >
                                 <Dropdown
                                     selectedId={selectedVersion}
@@ -1023,7 +1017,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                 direction="vertical"
                                                 gap={"20px"}
                                             >
-                                                <Text light>
+                                                <Text size="small" light>
                                                     After entering all the
                                                     information and selecting
                                                     the desired settings, click
