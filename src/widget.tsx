@@ -36,6 +36,12 @@ import { Node_Type } from "ricos-schema";
 import { writingOptions, servicesOptions } from "./dropdowns";
 import { DashboardWidgetProps } from "./blogApp";
 
+interface scrollIntoViewOptions {
+    behavior: "auto" | "smooth" | "instant";
+    block?: "start" | "center" | "end" | "nearest";
+    inline?: "start" | "center" | "end" | "nearest";
+}
+
 export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [isAppCrashed, setIsAppCrashed] = useState(false);
     const [appData, setAppData] = useState(false);
@@ -339,6 +345,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             }
         }
 
+        let scrollIntoViewOptions: scrollIntoViewOptions = { behavior: "smooth", block: "start" };
         let targetElement;
         if (helperStep == 2) {
             targetElement = document.querySelector(
@@ -350,23 +357,18 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             );
         }  else if (helperStep >= 7) {
             targetElement = document.querySelector(
-                '[dataHook="gpt-product-generate-button"]'
+                '[data-hook="gpt-product-generate-button"]'
             );
         }
 
+        if (helperStep == 4) {
+            scrollIntoViewOptions.block = "center";
+        }
+
         if (targetElement) {
-            targetElement.scrollIntoView({ behavior: "smooth" });
+            targetElement.scrollIntoView(scrollIntoViewOptions);
         }
     }, [isHelperOpen, helperStep]);
-
-    useEffect(() => {
-        const popoverArrow = document.querySelector(
-            '[data-hook="popover-arrow"]'
-        );
-        if (popoverArrow) {
-            (popoverArrow as HTMLElement).style.display = "none";
-        }
-    }, []);
 
     if (isAppCrashed) {
         return <CrashedApp />;
@@ -515,46 +517,15 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
-                                                        <Text size="small" light>
-                                                            Include any
-                                                            information you
-                                                            would like
-                                                            mentioned, or any
-                                                            specific
-                                                            instructions.
+                                                        <Text size="small" light>Include any information you would like mentioned, or any specific instructions.
                                                         </Text>
                                                         <Text size="small" light>
                                                             For Example:
                                                             <br />
                                                             <ul>
-                                                                <li>
-                                                                    {" "}
-                                                                    Mention at
-                                                                    least 5
-                                                                    times each
-                                                                    of the
-                                                                    following
-                                                                    keywords
-                                                                    "keyword 1",
-                                                                    "keyword 2".
-                                                                </li>
-                                                                <li>
-                                                                    List a few
-                                                                    pros and
-                                                                    cons
-                                                                </li>
-                                                                <li>
-                                                                    {" "}
-                                                                    Expand on
-                                                                    the
-                                                                    following
-                                                                    point: You
-                                                                    can only
-                                                                    help those
-                                                                    who want to
-                                                                    help
-                                                                    themselves.
-                                                                </li>
+                                                                <li>Mention at least 5 times each of the following keywords "keyword 1", "keyword 2".</li>
+                                                                <li>List a few pros and cons</li>
+                                                                <li>Expand on the following point: You can only help those who want to help themselves.</li>
                                                             </ul>
                                                         </Text>
                                                         <Box
@@ -620,11 +591,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap={"20px"}
                                                     >
-                                                        <Text size="small" light>
-                                                            Select the desired
-                                                            length of the
-                                                            description
-                                                        </Text>
+                                                        <Text size="small" light>Select the desired length of the description</Text>
                                                         <Box
                                                             direction="horizontal"
                                                             gap={"20px"}
@@ -683,14 +650,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap={"20px"}
                                                     >
-                                                        <Text size="small" light>
-                                                            Select the desired
-                                                            writing style
-                                                            (voice) from our
-                                                            existing list, or
-                                                            enter your own
-                                                            custom voice.
-                                                        </Text>
+                                                        <Text size="small" light>Select the desired writing style (voice) from our existing list, or enter your own custom voice.</Text>
                                                         <Box
                                                             direction="horizontal"
                                                             gap={"20px"}
@@ -769,22 +729,10 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         gap="20px"
                                                     >
                                                         <Text size="small" light>
-                                                            You have the option
-                                                            to select one or
-                                                            more target
-                                                            audiences for
-                                                            tailored content
-                                                            that addresses their
-                                                            specific needs,
-                                                            preferences, and
-                                                            lifestyles
+                                                            You have the option to select one or more target audiences for tailored content that addresses their specific needs, preferences, and lifestyles
                                                         </Text>
                                                         <Text size="small" light>
-                                                            * Selecting a Target
-                                                            Audience is useful
-                                                            for longer
-                                                            descriptions (100+
-                                                            words)
+                                                            * Selecting a Target Audience is useful for longer descriptions (100+ words)
                                                         </Text>
                                                         <Box
                                                             direction="horizontal"
@@ -870,28 +818,12 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
+                                                        <Text size="small" light> Select the ChatGPT version to use </Text>
                                                         <Text size="small" light>
-                                                            Select the ChatGPT
-                                                            version to use
+                                                            3.5 (Basic version) provides proficient text generation with a solid foundation of understanding and creativity
                                                         </Text>
                                                         <Text size="small" light>
-                                                            3.5 (Basic version)
-                                                            provides proficient
-                                                            text generation with
-                                                            a solid foundation
-                                                            of understanding and
-                                                            creativity
-                                                        </Text>
-                                                        <Text size="small" light>
-                                                            4 (Advanced version)
-                                                            offers enhanced
-                                                            understanding, more
-                                                            coherent responses,
-                                                            and an improved
-                                                            ability to provide
-                                                            detailed and
-                                                            accurate
-                                                            information.
+                                                            4 (Advanced version) offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information.
                                                         </Text>
                                                         <Box
                                                             direction="horizontal"
@@ -968,12 +900,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                 <Layout>
                                                     <Cell span={12}>
                                                         <Box direction="vertical">
-                                                            <Text>
-                                                                The content of
-                                                                the current blog
-                                                                will be
-                                                                overwritten
-                                                            </Text>
+                                                            <Text>The content of the current blog will be overwritten</Text>
                                                         </Box>
                                                     </Cell>
                                                     <Cell span={12}>
@@ -1018,10 +945,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                 gap={"20px"}
                                             >
                                                 <Text size="small" light>
-                                                    After entering all the
-                                                    information and selecting
-                                                    the desired settings, click
-                                                    on Generate Blog Post
+                                                    After entering all the information and selecting the desired settings, click on Generate Blog Post
                                                 </Text>
                                                 <Box
                                                     direction="horizontal"
