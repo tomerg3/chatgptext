@@ -299,6 +299,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     });
                 }
                 setWarningIsOpen(false);
+                setObserverLoader(false);
             })
             .catch((error) => {
                 showToast({
