@@ -467,7 +467,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         direction="vertical"
                                                         gap="20px"
                                                     >
-                                                        <Text size="small" light>Enter a concise and catchy name for your blog post in the field below.</Text>
+                                                        <Text size="small" light>Enter a concise and catchy name for your blog post in the field above.</Text>
                                                         <Text size="small" light>This name will guide the content generation process, helping ChatGPT understand the theme and direction of your desired blog entry.</Text>
                                                         <Box
                                                             direction="horizontal"
