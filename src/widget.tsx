@@ -107,8 +107,9 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     const tokensUsage = parseInt(
                         data.tokensUsage.replace(/,/g, "")
                     );
-                    const remaining = totalTokens - tokensUsage;
-                    setRemainingTokens(remaining < 0 ? 0 : remaining);
+                    console.log("tokens usage", tokensUsage)
+                    // const remaining = totalTokens - tokensUsage;
+                    setRemainingTokens(tokensUsage);
 
                     if (data.blogTutorialFinished == 1) {
                         setIsHelperOpen(false);
