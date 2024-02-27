@@ -204,7 +204,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 wordsNum: wordsNum,
                 style: selectedWritingStyle,
                 customStyle: customStyle,
-                targetAudience: selectedOptions,
+                targetAuidience: selectedOptions,
                 customAudience: customAudience,
                 gptVersion: selectedVersion,
                 k: getAdminKey(),
