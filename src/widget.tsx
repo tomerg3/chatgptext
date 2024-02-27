@@ -2,7 +2,7 @@ axios.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded
 import axios from "axios";
 import { showToast } from "@wix/dashboard-sdk";
 import { FC, useEffect, useState } from "react";
-import { Card, FormField, ThemeProvider, NumberInput, Layout, Cell, Dropdown, Input, MultiSelectCheckbox, Text, DropdownLayoutValueOption, Button, InputArea, Box, Loader, Divider, FloatingHelper, SectionHelper } from "wix-style-react";
+import { Card, FormField, ThemeProvider, NumberInput, Layout, Cell, Dropdown, Input, MultiSelectCheckbox, Text, DropdownLayoutValueOption, Button, InputArea, Box, Loader, Divider, FloatingHelper, SectionHelper, TagList } from "wix-style-react";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
 import { getInstance, getAdminKey } from "../data/utils";
@@ -51,12 +51,30 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         },
     ];
 
-    const [customAudience, setCustomAudience] = useState<string>("");
+    const [customAudience, setCustomAudience] = useState<string[]>([]);
     const [selectedOptions, setSelectedOptions] = useState<string[]>(["general"]);
     const serviceOptions = servicesOptions.map((option) => ({
         ...option,
         disabled: option.id == "general" ? selectedOptions.length > 0 : false,
     }));
+
+    const customAudienceHandler = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        const target = event.target as HTMLInputElement;
+        if (event.key === "Enter") {
+            event.persist();
+            event.preventDefault();
+            const newAudience = target.value.trim();
+            if (newAudience !== "") {
+                if (customAudience.includes(newAudience)) {
+                    showToast({ message: "Audience already exists", type: "error" });
+                } else {
+                    let customAudiences = [...customAudience, newAudience];
+                    setCustomAudience(customAudiences);
+                }
+                target.value = "";
+            }
+        }
+    };
 
     useEffect(() => {
         const search = window.location.search;
@@ -171,9 +189,9 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         setCustomStyle(e.target.value);
     };
 
-    const handleCustomAudienceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCustomAudience(e.target.value);
-    };
+    // const handleCustomAudienceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     setCustomAudience(e.target.value);
+    // };
 
     const handleWordsNumChange = (value: number | null) => {
         setWordsNum(value ?? 0);
@@ -184,9 +202,9 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     };
 
     function getHelpMessageByStyle(selectedStyle: string) {
-        const option = writingOptions.find(o => o.id === selectedStyle);
+        const option = writingOptions.find((o) => o.id === selectedStyle);
         return option ? option.help : "Default help message";
-      }
+    }
 
     const generateButtonHandlerWrapper = () => {
         generateButtonHandler({ preventDefault: () => {} });
@@ -308,7 +326,6 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             k: getAdminKey(),
         });
     };
-    
 
     useEffect(() => {
         if (isHelperOpen && helperStep === 4) {
@@ -663,10 +680,30 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 <MultiSelectCheckbox options={serviceOptions} selectedOptions={selectedOptions} onSelect={(option) => setSelectedOptions([...selectedOptions, String(option)])} onDeselect={(option) => setSelectedOptions(selectedOptions.filter((item) => item !== String(option)))} />
                             </FormField>
                         </Cell>
-                        {selectedOptions.includes("custom") && (
+                        {/* {selectedOptions.includes("custom") && (
                             <Cell span={12}>
                                 <FormField label="Custom Audience">
                                     <Input value={customAudience} placeholder="Target Audience" onChange={handleCustomAudienceChange} />
+                                </FormField>
+                            </Cell>
+                        )} */}
+
+                        {selectedOptions.includes("custom") && (
+                            <Cell>
+                                <FormField label="Custom Audience" labelPlacement="top" statusMessage="Enter values in the field above and press 'Enter' to add them to the list. You can add multiple custom audiences.">
+                                    <TagList
+                                        tags={customAudience.map((tag, index) => ({ id: tag, children: tag, key: index.toString() }))}
+                                        toggleMoreButton={(amountOfHiddenTags, isExpanded) => ({
+                                            label: isExpanded ? "Show Less" : `+${amountOfHiddenTags} More`,
+                                            tooltipContent: !isExpanded && "Show More",
+                                        })}
+                                        onTagRemove={(tagToRemove) => {
+                                            const updatedTags = customAudience.filter((tag) => tag !== tagToRemove);
+                                            setCustomAudience(updatedTags);
+                                        }}
+                                    />
+                                    {customAudience.length > 0 && <Box paddingTop={1}></Box>}
+                                    <Input type="text" size="medium" placeholder="Target Audience" onKeyDown={(event) => customAudienceHandler(event)} />
                                 </FormField>
                             </Cell>
                         )}
@@ -723,7 +760,9 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                     />
                                 }
                                 statusMessage={
-                                    selectedVersion == "3.5" ? "GPT-3.5 provides proficient text generation with a solid foundation of understanding and creativity." : "GPT-4 offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information."
+                                    selectedVersion == "3.5"
+                                        ? "GPT-3.5 provides proficient text generation with a solid foundation of understanding and creativity."
+                                        : "GPT-4 offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information."
                                 }
                                 dataHook="gpt-version"
                             >
