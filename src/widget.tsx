@@ -212,8 +212,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             .then((response) => {
                 if (totalTokens && response.data.tokensUsage) {
                     const tokensUsage = parseInt(response.data.tokensUsage);
-                    const remaining = totalTokens - tokensUsage;
-                    setRemainingTokens(remaining < 0 ? 0 : remaining);
+                    setRemainingTokens(tokensUsage);
                 }
                 if (response.data.response) {
                     const responseData = response.data.response;
@@ -242,7 +241,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             .then((data) => {
                 if (!data || data.error) {
                     if (data.error) {
-                        if (typeof data.upgrade !== "undefined" && data.upgrade) {
+                        if (typeof data.planWarning !== "undefined" && data.planWarning) {
                             showToast({
                                 message: data.error,
                                 type: "error",
