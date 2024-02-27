@@ -282,10 +282,25 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             .then((data) => {
                 if (!data || data.error) {
                     if (data.error) {
-                        showToast({
-                            message: data.error,
-                            type: "error",
-                        });
+                        if (typeof data.upgrade !== 'undefined' && data.upgrade) {
+                            showToast({
+                                message: data.error,
+                                type: "error",
+                                action: {
+                                    uiType: 'link',
+                                    text: 'Upgrade',
+                                    removeToastOnClick: true,
+                                    onClick: () => {
+                                        window.open(CONFIG.upgradeUrl, '_blank')
+                                    }
+                                  }
+                            });
+                        } else {
+                            showToast({
+                                message: data.error,
+                                type: "error",
+                            });
+                        }
                     } else {
                         showToast({
                             message:
