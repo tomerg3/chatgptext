@@ -2,14 +2,34 @@ axios.defaults.headers.post["Content-Type"] = "application/x-www-form-urlencoded
 import axios from "axios";
 import { showToast } from "@wix/dashboard-sdk";
 import { FC, useEffect, useState } from "react";
-import { Card, FormField, ThemeProvider, NumberInput, Layout, Cell, Dropdown, Input, MultiSelectCheckbox, Text, DropdownLayoutValueOption, Button, InputArea, Box, Loader, Divider, FloatingHelper, SectionHelper, TagList } from "wix-style-react";
+import {
+    Card,
+    FormField,
+    ThemeProvider,
+    NumberInput,
+    Layout,
+    Cell,
+    Dropdown,
+    Input,
+    MultiSelectCheckbox,
+    Text,
+    DropdownLayoutValueOption,
+    Button,
+    InputArea,
+    Box,
+    Loader,
+    Divider,
+    FloatingHelper,
+    SectionHelper,
+    TagList,
+} from "wix-style-react";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
 import { getInstance, getAdminKey } from "../data/utils";
 import { CrashedApp, InstallationError, PageLoader } from "./WarningScreens/WarningScreens";
 import { RichContent } from "ricos-schema";
 import { Node_Type } from "ricos-schema";
-import { writingOptions, servicesOptions } from "./dropdowns";
+import { writingOptions, servicesOptions, generateType } from "./dropdowns";
 import { DashboardWidgetProps } from "./blogApp";
 
 interface scrollIntoViewOptions {
@@ -34,6 +54,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
 
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<string>("Conversational");
+    const [selectedGenerateType, setSelectedGenerateType] = useState<string>("generate");
     const [customStyle, setCustomStyle] = useState<string>("");
     const writingStylesOptions = writingOptions;
 
@@ -181,6 +202,10 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         setSelectedWritingStyle(option.id as string);
     };
 
+    const handleSelectGenerateType = (option: DropdownLayoutValueOption) => {
+        setSelectedGenerateType(option.id as string);
+    };
+
     const handleSelectVersion = (option: DropdownLayoutValueOption) => {
         setSelectedVersion(option.id as string);
     };
@@ -216,6 +241,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         axios
             .post(CONFIG.ajaxUrl, {
                 instance: getInstance(),
+                k: getAdminKey(),
                 action: "generateBlogDescription",
                 draftName: draftName,
                 additionalInfo: additionalInfo,
@@ -225,7 +251,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 targetAuidience: selectedOptions,
                 customAudience: customAudience,
                 gptVersion: selectedVersion,
-                k: getAdminKey(),
+                generateType: selectedGenerateType,
             })
             .then((response) => {
                 if (totalTokens && response.data.tokensUsage) {
@@ -305,14 +331,14 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     };
 
     const handleHelperActionClick = () => {
-        if (helperStep <= 7) {
+        if (!content ? helperStep <= 8 : helperStep <= 7) {
             setHelperStep((step) => step + 1);
         } else {
             setIsHelperOpen(false);
         }
     };
     const handlePreviousActionClick = () => {
-        if (helperStep <= 7) {
+        if (!content ? helperStep <= 8 : helperStep <= 7) {
             setHelperStep((step) => Math.max(1, step - 1));
         } else {
             setIsHelperOpen(false);
@@ -328,25 +354,45 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     };
 
     useEffect(() => {
-        if (isHelperOpen && helperStep === 4) {
-            const voiceDropdown = document.querySelector('[data-hook="gpt-voice"] input') as HTMLInputElement;
-            if (voiceDropdown) {
-                voiceDropdown.click();
+
+        if(content){
+            if (isHelperOpen && helperStep === 4) {
+                const voiceDropdown = document.querySelector('[data-hook="gpt-voice"] input') as HTMLInputElement;
+                if (voiceDropdown) {
+                    voiceDropdown.click();
+                }
+            }
+        } else {
+            if (isHelperOpen && helperStep === 5) {
+                const voiceDropdown = document.querySelector('[data-hook="gpt-voice"] input') as HTMLInputElement;
+                if (voiceDropdown) {
+                    voiceDropdown.click();
+                }
             }
         }
 
         let scrollIntoViewOptions: scrollIntoViewOptions = { behavior: "smooth", block: "start" };
         let targetElement;
         if (helperStep == 2) {
-            targetElement = document.querySelector('[data-hook="gpt-additional-details"]');
-        } else if (helperStep == 2 || helperStep == 3 || helperStep == 4 || helperStep == 5 || helperStep == 6) {
-            targetElement = document.querySelector('[data-hook="gpt-number-words"]');
+            targetElement = content ? document.querySelector('[data-hook="gpt-additional-details"]') : document.querySelector('[data-hook="gpt-generate-type"]');
+        } else if (helperStep == 3 || helperStep == 4 || helperStep == 5 || helperStep == 6) {
+            if (helperStep == 3 && !content) {
+                targetElement = document.querySelector('[data-hook="gpt-additional-details"]');
+            } else {
+                targetElement = document.querySelector('[data-hook="gpt-number-words"]');
+            }
         } else if (helperStep >= 7) {
             targetElement = document.querySelector('[data-hook="gpt-product-generate-button"]');
         }
 
-        if (helperStep == 4) {
-            scrollIntoViewOptions.block = "center";
+        if(content){
+            if (helperStep == 4) {
+                scrollIntoViewOptions.block = "center";
+            }
+        } else {
+            if (helperStep == 5) {
+                scrollIntoViewOptions.block = "center";
+            }
         }
 
         if (targetElement) {
@@ -462,12 +508,66 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 <Input value={draftName} onChange={(e) => setDraftName(e.target.value)} placeholder="Enter Blog Title" />
                             </FormField>
                         </Cell>
+
+                        {!content && (
+                            <Cell span={12}>
+                                <FormField
+                                    label="Select type"
+                                    statusMessage={
+                                        <FloatingHelper
+                                            opened={isHelperOpen && helperStep === 2}
+                                            width={"280px"}
+                                            onClose={helperClose}
+                                            target="Select generate type."
+                                            content={
+                                                <FloatingHelper.Content
+                                                    body={
+                                                        <Box direction="vertical" gap={"20px"}>
+                                                            <Text size="small" light>
+                                                                Select the desired generate type.
+                                                            </Text>
+                                                            <Box direction="horizontal" gap={"20px"}>
+                                                                <Button
+                                                                    onClick={() => {
+                                                                        handlePreviousActionClick();
+                                                                    }}
+                                                                    skin="premium-light"
+                                                                    size="small"
+                                                                    priority="secondary"
+                                                                >
+                                                                    Previous
+                                                                </Button>
+                                                                <Button
+                                                                    onClick={() => {
+                                                                        handleHelperActionClick();
+                                                                    }}
+                                                                    skin="premium-light"
+                                                                    size="small"
+                                                                    priority="secondary"
+                                                                >
+                                                                    Next
+                                                                </Button>
+                                                            </Box>
+                                                        </Box>
+                                                    }
+                                                />
+                                            }
+                                            placement="bottom"
+                                        />
+                                    }
+                                    dataHook="gpt-generate-type"
+                                >
+                                    <Dropdown selectedId={selectedGenerateType} options={generateType} onSelect={handleSelectGenerateType} />
+                                </FormField>
+                            </Cell>
+                        )}
+
                         <Cell span={12}>
                             <FormField
                                 label="Additional Information"
                                 statusMessage={
                                     <FloatingHelper
-                                        opened={isHelperOpen && helperStep === 2}
+                                        opened={isHelperOpen && helperStep === (!content ? 3 : 2)}
                                         width={"280px"}
                                         onClose={helperClose}
                                         target="Include any information you would like mentioned, or any specific instructions."
@@ -526,7 +626,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 label="Number of Words"
                                 statusMessage={
                                     <FloatingHelper
-                                        opened={isHelperOpen && helperStep === 3}
+                                        opened={isHelperOpen && helperStep === (!content ? 4 : 3)}
                                         width={"280px"}
                                         onClose={helperClose}
                                         target={selectedVersion == "3.5" ? "Each word uses approximately 1-2 tokens)." : "Each word uses approximately 5-10 tokens)."}
@@ -575,7 +675,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             <FormField
                                 label={
                                     <FloatingHelper
-                                        opened={isHelperOpen && helperStep === 4}
+                                        opened={isHelperOpen && helperStep === (!content ? 5 : 4)}
                                         width={"280px"}
                                         onClose={helperClose}
                                         target="Writing Style (Voice)"
@@ -631,7 +731,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             <FormField
                                 label={
                                     <FloatingHelper
-                                        opened={isHelperOpen && helperStep === 5}
+                                        opened={isHelperOpen && helperStep === (!content ? 6 : 5)}
                                         width={"280px"}
                                         onClose={helperClose}
                                         target="Target Audience"
@@ -640,7 +740,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                 body={
                                                     <Box direction="vertical" gap="20px">
                                                         <Text size="small" light>
-                                                            You have the option to select one or more target audiences for tailored content that addresses their specific needs, preferences, and lifestyles
+                                                            You have the option to select one or more target audiences for tailored content that addresses their specific needs, preferences, and
+                                                            lifestyles
                                                         </Text>
                                                         <Text size="small" light>
                                                             * Selecting a Target Audience is useful for longer descriptions (100+ words)
@@ -677,7 +778,12 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 statusMessage="Select one or more target audience for tailored content that addresses their specific needs, preferences, and lifestyles."
                                 dataHook="gpt-target-audience"
                             >
-                                <MultiSelectCheckbox options={serviceOptions} selectedOptions={selectedOptions} onSelect={(option) => setSelectedOptions([...selectedOptions, String(option)])} onDeselect={(option) => setSelectedOptions(selectedOptions.filter((item) => item !== String(option)))} />
+                                <MultiSelectCheckbox
+                                    options={serviceOptions}
+                                    selectedOptions={selectedOptions}
+                                    onSelect={(option) => setSelectedOptions([...selectedOptions, String(option)])}
+                                    onDeselect={(option) => setSelectedOptions(selectedOptions.filter((item) => item !== String(option)))}
+                                />
                             </FormField>
                         </Cell>
                         {/* {selectedOptions.includes("custom") && (
@@ -690,7 +796,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
 
                         {selectedOptions.includes("custom") && (
                             <Cell>
-                                <FormField label="Custom Audience" labelPlacement="top" statusMessage="Enter values in the field above and press 'Enter' to add them to the list. You can add multiple custom audiences.">
+                                <FormField
+                                    label="Custom Audience"
+                                    labelPlacement="top"
+                                    statusMessage="Enter values in the field above and press 'Enter' to add them to the list. You can add multiple custom audiences."
+                                >
                                     <TagList
                                         tags={customAudience.map((tag, index) => ({ id: tag, children: tag, key: index.toString() }))}
                                         toggleMoreButton={(amountOfHiddenTags, isExpanded) => ({
@@ -712,7 +822,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             <FormField
                                 label={
                                     <FloatingHelper
-                                        opened={isHelperOpen && helperStep === 6}
+                                        opened={isHelperOpen && helperStep === (!content ? 7 : 6)}
                                         width={"280px"}
                                         onClose={helperClose}
                                         target="ChatGPT Version"
@@ -728,7 +838,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                             3.5 (Basic version) provides proficient text generation with a solid foundation of understanding and creativity
                                                         </Text>
                                                         <Text size="small" light>
-                                                            4 (Advanced version) offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information.
+                                                            4 (Advanced version) offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate
+                                                            information.
                                                         </Text>
                                                         <Box direction="horizontal" gap={"20px"}>
                                                             <Button
@@ -772,7 +883,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                         </Cell>
                         <Cell span={12}>
                             <FloatingHelper
-                                opened={isHelperOpen && helperStep === 7}
+                                opened={isHelperOpen && helperStep === (!content ? 8 : 7)}
                                 width={"280px"}
                                 onClose={helperClose}
                                 target={

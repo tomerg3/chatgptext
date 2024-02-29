@@ -76,3 +76,7 @@ export const servicesOptions = [
     { id: "Video Gamers", value: "Video Gamers" },
     { id: "custom", value: "Custom" },
 ];
+export const generateType = [
+    { id: "generate", value: "Generate new content" },
+    { id: "rewrite", value: "Rewrite my post" },
+];
