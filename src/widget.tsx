@@ -52,6 +52,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [warningIsOpen, setWarningIsOpen] = useState(false);
     const [observerLoader, setObserverLoader] = useState(false);
 
+    const [defaultContent, setDefaulContent] = useState<any>();
+
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<string>("Conversational");
     const [selectedGenerateType, setSelectedGenerateType] = useState<string>("generate");
@@ -142,7 +144,28 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             try {
                 const postTitle = await props.getPostTitle();
                 setDraftName(postTitle);
+
                 const postContent = await props.getPostContent();
+
+                const extractTexts = (nodes: any[]) => {
+                    let texts: any[] = [];
+
+                    nodes.forEach((node) => {
+                        if (node.type === "TEXT" && node.textData) {
+                            texts.push(node.textData.text);
+                        } else if (node.nodes && node.nodes.length > 0) {
+                            texts = texts.concat(extractTexts(node.nodes));
+                        }
+                    });
+
+                    return texts;
+                };
+
+                const allTexts = extractTexts(postContent.nodes);
+                const combinedText = allTexts.join(" ");
+
+                setDefaulContent(combinedText);
+                
                 if (postContent && postContent.nodes) {
                     (postContent.nodes as any[]).forEach((paragraph) => {
                         if (paragraph.type === "PARAGRAPH" && paragraph.nodes.length > 0) {
@@ -251,7 +274,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 targetAuidience: selectedOptions,
                 customAudience: customAudience,
                 gptVersion: selectedVersion,
-                generateType: selectedGenerateType,
+                ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
             })
             .then((response) => {
                 if (totalTokens && response.data.tokensUsage) {
@@ -354,8 +377,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     };
 
     useEffect(() => {
-
-        if(content){
+        if (content) {
             if (isHelperOpen && helperStep === 4) {
                 const voiceDropdown = document.querySelector('[data-hook="gpt-voice"] input') as HTMLInputElement;
                 if (voiceDropdown) {
@@ -385,7 +407,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             targetElement = document.querySelector('[data-hook="gpt-product-generate-button"]');
         }
 
-        if(content){
+        if (content) {
             if (helperStep == 4) {
                 scrollIntoViewOptions.block = "center";
             }
