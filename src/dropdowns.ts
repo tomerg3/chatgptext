@@ -77,6 +77,6 @@ export const servicesOptions = [
     { id: "custom", value: "Custom" },
 ];
 export const generateType = [
-    { id: "generate", value: "Generate new content" },
-    { id: "rewrite", value: "Rewrite my post" },
+    { id: "generate", value: "Create a New Post" },
+    { id: "rewrite", value: "Rewrite an Existing Post" },
 ];

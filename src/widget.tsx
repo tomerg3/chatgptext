@@ -534,19 +534,25 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                         {!content && (
                             <Cell span={12}>
                                 <FormField
-                                    label="Select type"
+                                    label="Content Creation Type"
                                     statusMessage={
                                         <FloatingHelper
                                             opened={isHelperOpen && helperStep === 2}
                                             width={"280px"}
                                             onClose={helperClose}
-                                            target="Select generate type."
+                                            target="You can have ChatGPT write a new post for you, or rewrite your existing post."
                                             content={
                                                 <FloatingHelper.Content
                                                     body={
                                                         <Box direction="vertical" gap={"20px"}>
                                                             <Text size="small" light>
-                                                                Select the desired generate type.
+                                                            Now that you've set a direction with your blog post title, let's decide on the approach to creating your content. You have two powerful options based on your needs:
+                                                            </Text>
+                                                            <Text size="small" light>
+                                                            Create a New Post: Choose this option if you're looking to bring a fresh idea to life. Ideal for when you're exploring new topics, trends, or want to add more original content to your site. (* Will replace your existing content)
+                                                            </Text>
+                                                            <Text size="small" light>
+                                                            Rewrite an Existing Post: Opt for this if you have existing content that needs a new spin. Perfect for updating facts, improving readability, or adjusting the tone to better match your current audience's expectations.
                                                             </Text>
                                                             <Box direction="horizontal" gap={"20px"}>
                                                                 <Button
