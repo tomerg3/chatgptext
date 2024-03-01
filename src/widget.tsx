@@ -308,7 +308,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
 
                         let updatedNodes = [];
                         let textIndex = 0;
-                        
+
                         allDefContent.nodes.forEach((node: any) => {
                             if (node.type === "PARAGRAPH" && textIndex < newParagraphTexts.length) {
                                 const updatedParagraph = { ...node };
@@ -478,6 +478,14 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             targetElement.scrollIntoView(scrollIntoViewOptions);
         }
     }, [isHelperOpen, helperStep]);
+
+    useEffect(() => {
+        let scrollIntoViewOptions: scrollIntoViewOptions = { behavior: "smooth", block: "center" };
+        let targetElement = document.querySelector('[data-hook="gpt-warning"]');
+        if (warningIsOpen && targetElement) {
+            targetElement.scrollIntoView(scrollIntoViewOptions);
+        }
+    }, [warningIsOpen]);
 
     if (isAppCrashed) {
         return <CrashedApp />;
@@ -975,31 +983,31 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 width={"280px"}
                                 onClose={helperClose}
                                 target={
-                                    <>
-                                        {!warningIsOpen ? (
-                                            <Button size="medium" dataHook="gpt-product-generate-button" onClick={generateButton}>
-                                                {observerLoader ? <Loader size="tiny" /> : "Generate Blog Post"}
-                                            </Button>
-                                        ) : (
-                                            <SectionHelper appearance="warning">
-                                                <Layout>
-                                                    <Cell span={12}>
-                                                        <Box direction="vertical">
-                                                            <Text>The content of the current blog will be overwritten</Text>
-                                                        </Box>
-                                                    </Cell>
-                                                    <Cell span={12}>
-                                                        <Box direction="horizontal" width={"100%"} gap={"10px"}>
-                                                            <Button onClick={() => setWarningIsOpen(false)} priority="secondary">
-                                                                Cancel
-                                                            </Button>
-                                                            <Button onClick={generateButtonHandlerWrapper}>{observerLoader ? <Loader size="tiny" /> : "Continue"}</Button>
-                                                        </Box>
-                                                    </Cell>
-                                                </Layout>
-                                            </SectionHelper>
-                                        )}
-                                    </>
+                                    !warningIsOpen ? (
+                                        <Button size="medium" dataHook="gpt-product-generate-button" onClick={generateButton}>
+                                            {observerLoader ? <Loader size="tiny" /> : "Generate Blog Post"}
+                                        </Button>
+                                    ) : (
+                                        <SectionHelper appearance="warning" dataHook="gpt-warning">
+                                            <Layout>
+                                                <Cell span={12}>
+                                                    <Box direction="vertical">
+                                                        <Text>The content of the current blog will be overwritten</Text>
+                                                    </Box>
+                                                </Cell>
+                                                <Cell span={12}>
+                                                    <Box direction="horizontal" width={"100%"} gap={"10px"}>
+                                                        <Button onClick={() => setWarningIsOpen(false)} priority="secondary">
+                                                            Cancel
+                                                        </Button>
+                                                        <Button onClick={generateButtonHandlerWrapper}>
+                                                            {observerLoader ? <Loader size="tiny" /> : "Continue"}
+                                                        </Button>
+                                                    </Box>
+                                                </Cell>
+                                            </Layout>
+                                        </SectionHelper>
+                                    )
                                 }
                                 content={
                                     <FloatingHelper.Content
@@ -1036,8 +1044,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 }
                                 placement="bottom"
                             />
-                            <Box paddingBottom={"25px"}></Box>
                         </Cell>
+                        <Box paddingTop={"25px"}></Box>
                     </Layout>
                 </Box>
             </Card>
