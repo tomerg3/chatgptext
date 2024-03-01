@@ -53,6 +53,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [observerLoader, setObserverLoader] = useState(false);
 
     const [defaultContent, setDefaulContent] = useState<any>();
+    // const [images, setImages] = useState<any>();
+    const [allDefContent, setAllDefContent] = useState<any>();
 
     const [additionalInfo, setAdditionalInfo] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<string>("Conversational");
@@ -147,9 +149,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
 
                 const postContent = await props.getPostContent();
 
+                setAllDefContent(postContent);
+
+                //extracting text
                 const extractTexts = (nodes: any[]) => {
                     let texts: any[] = [];
-
                     nodes.forEach((node) => {
                         if (node.type === "TEXT" && node.textData) {
                             texts.push(node.textData.text);
@@ -164,8 +168,22 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 const allTexts = extractTexts(postContent.nodes);
                 const combinedText = allTexts.join(" ");
 
+                // const extractImages = (nodes: any[]) => {
+                //     let images: any[] = [];
+                //     nodes.forEach((node) => {
+                //         if (node.type === "IMAGE") {
+                //             images.push({ id: node.id, data: node.imageData.image });
+                //         }
+                //     });
+                //     return images;
+                // };
+
+                // const allImages = extractImages(postContent.nodes);
+                // console.log(allImages);
+                // setImages(allImages);
+
                 setDefaulContent(combinedText);
-                
+
                 if (postContent && postContent.nodes) {
                     (postContent.nodes as any[]).forEach((paragraph) => {
                         if (paragraph.type === "PARAGRAPH" && paragraph.nodes.length > 0) {
@@ -276,27 +294,66 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 gptVersion: selectedVersion,
                 ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
             })
-            .then((response) => {
+            .then(async (response) => {
                 if (totalTokens && response.data.tokensUsage) {
                     const tokensUsage = parseInt(response.data.tokensUsage);
                     setRemainingTokens(tokensUsage);
                 }
                 if (response.data.response) {
                     const responseData = response.data.response;
-                    const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
-                        type: Node_Type.PARAGRAPH,
-                        nodes: [
-                            {
-                                textData: {
-                                    text: paragraph + "\n",
-                                    decorations: [],
+                    let newRichContent;
+
+                    if (!content && selectedGenerateType == "rewrite") {
+                        const newParagraphTexts = responseData.split("\n\n");
+
+                        let updatedNodes = [];
+                        let textIndex = 0;
+                        
+                        allDefContent.nodes.forEach((node: any) => {
+                            if (node.type === "PARAGRAPH" && textIndex < newParagraphTexts.length) {
+                                const updatedParagraph = { ...node };
+                                if (updatedParagraph.nodes && updatedParagraph.nodes.length > 0 && updatedParagraph.nodes[0].type === "TEXT") {
+                                    updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex] + "\n";
+                                    textIndex++;
+                                }
+                                updatedNodes.push(updatedParagraph);
+                            } else if (node.type !== "PARAGRAPH") {
+                                updatedNodes.push(node);
+                            }
+                        });
+
+                        for (; textIndex < newParagraphTexts.length; textIndex++) {
+                            updatedNodes.push({
+                                type: Node_Type.PARAGRAPH,
+                                nodes: [
+                                    {
+                                        textData: {
+                                            text: newParagraphTexts[textIndex] + "\n",
+                                            decorations: [],
+                                        },
+                                    },
+                                ],
+                            });
+                        }
+
+                        newRichContent = { nodes: updatedNodes };
+                    } else {
+                        const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
+                            type: Node_Type.PARAGRAPH,
+                            nodes: [
+                                {
+                                    textData: {
+                                        text: paragraph + "\n",
+                                        decorations: [],
+                                    },
                                 },
-                            },
-                        ],
-                    }));
-                    const newRichContent: RichContent = {
-                        nodes: paragraphs,
-                    };
+                            ],
+                        }));
+
+                        newRichContent = {
+                            nodes: paragraphs,
+                        };
+                    }
 
                     props.setPostContent(newRichContent);
                     props.setPostTitle(draftName);
@@ -546,13 +603,16 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                     body={
                                                         <Box direction="vertical" gap={"20px"}>
                                                             <Text size="small" light>
-                                                            Now that you've set a direction with your blog post title, let's decide on the approach to creating your content. You have two powerful options based on your needs:
+                                                                Now that you've set a direction with your blog post title, let's decide on the approach to creating your content. You have two powerful
+                                                                options based on your needs:
                                                             </Text>
                                                             <Text size="small" light>
-                                                            Create a New Post: Choose this option if you're looking to bring a fresh idea to life. Ideal for when you're exploring new topics, trends, or want to add more original content to your site. (* Will replace your existing content)
+                                                                Create a New Post: Choose this option if you're looking to bring a fresh idea to life. Ideal for when you're exploring new topics,
+                                                                trends, or want to add more original content to your site. (* Will replace your existing content)
                                                             </Text>
                                                             <Text size="small" light>
-                                                            Rewrite an Existing Post: Opt for this if you have existing content that needs a new spin. Perfect for updating facts, improving readability, or adjusting the tone to better match your current audience's expectations.
+                                                                Rewrite an Existing Post: Opt for this if you have existing content that needs a new spin. Perfect for updating facts, improving
+                                                                readability, or adjusting the tone to better match your current audience's expectations.
                                                             </Text>
                                                             <Box direction="horizontal" gap={"20px"}>
                                                                 <Button
