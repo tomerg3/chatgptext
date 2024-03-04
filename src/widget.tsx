@@ -205,11 +205,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     }, []);
 
     const generateButton = () => {
-        if (draftName && draftName !== "" && content) {
+        if (draftName && content) {
             setWarningIsOpen(false);
             generateButtonHandler({ preventDefault: () => {} });
             return;
-        } else if (!draftName || draftName == "") {
+        } else if (!draftName) {
             setWarningIsOpen(false);
             showToast({
                 message: "Start by entering a Catchy Title so ChatGPT could write the content",
@@ -217,7 +217,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
             });
             setObserverLoader(false);
             return;
-        } else if (draftName && draftName !== "" && !content) {
+        } else if (draftName && !content) {
             setWarningIsOpen(true);
             setObserverLoader(false);
             return;
@@ -293,6 +293,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 customAudience: customAudience,
                 gptVersion: selectedVersion,
                 ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
+                blogExtension: 1,
             })
             .then(async (response) => {
                 if (totalTokens && response.data.tokensUsage) {
