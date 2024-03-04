@@ -1001,9 +1001,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         <Button onClick={() => setWarningIsOpen(false)} priority="secondary">
                                                             Cancel
                                                         </Button>
-                                                        <Button onClick={generateButtonHandlerWrapper}>
-                                                            {observerLoader ? <Loader size="tiny" /> : "Continue"}
-                                                        </Button>
+                                                        <Button onClick={generateButtonHandlerWrapper}>{observerLoader ? <Loader size="tiny" /> : "Continue"}</Button>
                                                     </Box>
                                                 </Cell>
                                             </Layout>
@@ -1046,7 +1044,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 placement="bottom"
                             />
                         </Cell>
-                        <Box paddingTop={"25px"}></Box>
+                        {!warningIsOpen ? <Box paddingTop={"50px"}></Box> : <Box paddingTop={"25px"}></Box>}
                     </Layout>
                 </Box>
             </Card>
