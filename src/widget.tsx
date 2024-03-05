@@ -307,14 +307,14 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     if (!content && selectedGenerateType == "rewrite") {
                         const newParagraphTexts = responseData.split("\n\n");
 
-                        let updatedNodes = [];
+                        let updatedNodes: { type: Node_Type; nodes: { textData: { text: string; decorations: never[]; }; }[]; }[] = [];
                         let textIndex = 0;
 
                         allDefContent.nodes.forEach((node: any) => {
                             if (node.type === "PARAGRAPH" && textIndex < newParagraphTexts.length) {
                                 const updatedParagraph = { ...node };
                                 if (updatedParagraph.nodes && updatedParagraph.nodes.length > 0 && updatedParagraph.nodes[0].type === "TEXT") {
-                                    updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex] + "\n";
+                                    updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex];
                                     textIndex++;
                                 }
                                 updatedNodes.push(updatedParagraph);
@@ -323,13 +323,15 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             }
                         });
 
+                        console.log("updatedNodes", updatedNodes);
+
                         for (; textIndex < newParagraphTexts.length; textIndex++) {
                             updatedNodes.push({
                                 type: Node_Type.PARAGRAPH,
                                 nodes: [
                                     {
                                         textData: {
-                                            text: newParagraphTexts[textIndex] + "\n",
+                                            text: newParagraphTexts[textIndex],
                                             decorations: [],
                                         },
                                     },
