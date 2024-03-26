@@ -513,7 +513,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     }
 
     if (!appData) {
-        return <PageLoader />;
+        return (
+            <Box align="center">
+                <PageLoader />
+            </Box>
+        );
     }
 
     if ((appData as any)?.instance_id === false) {

@@ -22,7 +22,11 @@ export const BlogAppsExtension = () => {
         });
     }, []);
     if (!loaded) {
-        return <Loader />;
+        return (
+            <Box align="center">
+                <Loader />
+            </Box>
+        );
     } else {
         return (
             <Widget
