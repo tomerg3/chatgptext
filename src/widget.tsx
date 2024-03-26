@@ -22,12 +22,12 @@ import {
     FloatingHelper,
     SectionHelper,
     TagList,
+    LinearProgressBar,
 } from "wix-style-react";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
 import { getInstance, getAdminKey } from "../data/utils";
 import { CrashedApp, InstallationError, PageLoader } from "./WarningScreens/WarningScreens";
-import { RichContent } from "ricos-schema";
 import { Node_Type } from "ricos-schema";
 import { writingOptions, servicesOptions, generateType } from "./dropdowns";
 import { DashboardWidgetProps } from "./blogApp";
@@ -45,7 +45,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [remainingTokens, setRemainingTokens] = useState<number>();
     const [totalTokens, setTotalTokens] = useState<number>();
     const [wordsNum, setWordsNum] = useState<number>(500);
-    const [draftName, setDraftName] = useState<string>("");
+    const [draftName, setDraftName] = useState("");
+    const [draftNameError, setDraftNameError] = useState("");
     const [helperStep, setHelperStep] = useState<number>(1);
     const [isHelperOpen, setIsHelperOpen] = useState(true);
     const [content, setContent] = useState(true);
@@ -57,6 +58,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [allDefContent, setAllDefContent] = useState<any>();
 
     const [additionalInfo, setAdditionalInfo] = useState("");
+    const [additionalInfoError, setAdditionalInfoError] = useState("");
     const [selectedWritingStyle, setSelectedWritingStyle] = useState<string>("Conversational");
     const [selectedGenerateType, setSelectedGenerateType] = useState<string>("generate");
     const [customStyle, setCustomStyle] = useState<string>("");
@@ -98,6 +100,26 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 }
                 target.value = "";
             }
+        }
+    };
+
+    const handleDraftNameChange = (e: { target: { value: any } }) => {
+        const inputValue = e.target.value;
+        if (inputValue.length <= 200) {
+            setDraftName(inputValue);
+            setDraftNameError("");
+        } else {
+            setDraftNameError("Blog title cannot exceed 100 characters.");
+        }
+    };
+
+    const handleAdditionalInfoChange = (e: { target: { value: any } }) => {
+        const inputValue = e.target.value;
+        if (inputValue.length <= 3000) {
+            setAdditionalInfo(inputValue);
+            setAdditionalInfoError("");
+        } else {
+            setAdditionalInfoError("Additional information cannot exceed 3000 characters.");
         }
     };
 
@@ -263,10 +285,6 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         setWordsNum(value ?? 0);
     };
 
-    const handleAdditionalInfoChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setAdditionalInfo(e.target.value);
-    };
-
     function getHelpMessageByStyle(selectedStyle: string) {
         const option = writingOptions.find((o) => o.id === selectedStyle);
         return option ? option.help : "Default help message";
@@ -307,7 +325,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     if (!content && selectedGenerateType == "rewrite") {
                         const newParagraphTexts = responseData.split("\n\n");
 
-                        let updatedNodes: { type: Node_Type; nodes: { textData: { text: string; decorations: never[]; }; }[]; }[] = [];
+                        let updatedNodes: { type: Node_Type; nodes: { textData: { text: string; decorations: never[] } }[] }[] = [];
                         let textIndex = 0;
 
                         allDefContent.nodes.forEach((node: any) => {
@@ -506,48 +524,56 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         <ThemeProvider theme={theme({ active: true })}>
             <Card stretchVertically>
                 <Box padding="0 !important">
-                    <Layout alignItems="center">
-                        <Cell span={6}>
-                            <Box direction="vertical" align="center">
-                                <Text weight="bold" size="small">
-                                    Plan Type
-                                </Text>
-                                <Text size="small">{planType}</Text>
-                            </Box>
-
-                            <Box align="center" paddingTop={"10px"}>
-                                <Button
-                                    skin="dark"
-                                    priority="primary"
-                                    size="medium"
-                                    onClick={() => {
-                                        setIsHelperOpen(true);
-                                        setHelperStep(1);
-                                    }}
-                                >
-                                    Tutorial
-                                </Button>
-                            </Box>
-                        </Cell>
-                        <Cell span={6}>
-                            <Box direction="vertical" align="center">
-                                <Text weight="bold" size="small">
-                                    Tokens
-                                </Text>
-                                <Text size="small">
-                                    {remainingTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}/{totalTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                                </Text>
-                            </Box>
-
-                            {planType !== "premium" && (
-                                <Box align="center" paddingTop={"10px"}>
-                                    <Button as="a" skin="premium" href={CONFIG.upgradeUrl} target="_blank" size="medium">
-                                        Upgrade
-                                    </Button>
-                                </Box>
-                            )}
-                        </Cell>
-                    </Layout>
+                    <Box border={"1px solid #CFD1DC"} borderRadius={"10px"} width={"100%"} padding={"15px 20px"}>
+                        <Card stretchVertically>
+                            <Layout gap={"10px"}>
+                                <Cell span={12}>
+                                    <Text size="small">Your plan: </Text>
+                                    <Text size="small" weight="bold">
+                                        {planType}
+                                    </Text>
+                                </Cell>
+                                <Cell></Cell>
+                            </Layout>
+                            <Card.Divider />
+                            <Layout gap={"10px"}>
+                                <Cell></Cell>
+                                <Cell span={12}>
+                                    <FormField>
+                                        <Box align="space-between" width={"100%"} padding={"0 6px"}>
+                                            <Text size="small" skin="standard">
+                                                Tokens
+                                            </Text>
+                                            <Text size="small" skin="standard">
+                                                {remainingTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} of {totalTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                            </Text>
+                                        </Box>
+                                        <LinearProgressBar skin="premium" value={totalTokens && remainingTokens !== undefined ? 100 - ((totalTokens - remainingTokens) / totalTokens) * 100 : 0} />
+                                    </FormField>
+                                </Cell>
+                                <Cell span={12}>
+                                    {planType !== "premium" && (
+                                        <Box align="center" paddingTop={"10px"} gap={"20px"}>
+                                            <Button as="a" skin="premium" href={CONFIG.upgradeUrl} target="_blank" size="medium">
+                                                Upgrade
+                                            </Button>
+                                            <Button
+                                                skin="dark"
+                                                priority="primary"
+                                                size="medium"
+                                                onClick={() => {
+                                                    setIsHelperOpen(true);
+                                                    setHelperStep(1);
+                                                }}
+                                            >
+                                                Tutorial
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Cell>
+                            </Layout>
+                        </Card>
+                    </Box>
                 </Box>
             </Card>
             <Box padding={2}>
@@ -559,6 +585,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                         <Cell span={12}>
                             <FormField
                                 label="Blog Post Title"
+                                charCount={200 - draftName.length}
                                 statusMessage={
                                     <FloatingHelper
                                         opened={isHelperOpen && helperStep === 1}
@@ -580,7 +607,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -595,7 +622,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                     />
                                 }
                             >
-                                <Input value={draftName} onChange={(e) => setDraftName(e.target.value)} placeholder="Enter Blog Title" />
+                                <Input value={draftName} onChange={handleDraftNameChange} placeholder="Enter Blog Title" />
                             </FormField>
                         </Cell>
 
@@ -630,7 +657,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                     onClick={() => {
                                                                         handlePreviousActionClick();
                                                                     }}
-                                                                    skin="premium-light"
+                                                                    skin="light"
                                                                     size="small"
                                                                     priority="secondary"
                                                                 >
@@ -640,7 +667,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                     onClick={() => {
                                                                         handleHelperActionClick();
                                                                     }}
-                                                                    skin="premium-light"
+                                                                    skin="light"
                                                                     size="small"
                                                                     priority="secondary"
                                                                 >
@@ -662,63 +689,64 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                         )}
 
                         <Cell span={12}>
-                            <FormField
-                                label="Additional Information"
-                                statusMessage={
-                                    <FloatingHelper
-                                        opened={isHelperOpen && helperStep === (!content ? 3 : 2)}
-                                        width={"280px"}
-                                        onClose={helperClose}
-                                        target="Include any information you would like mentioned, or any specific instructions."
-                                        content={
-                                            <FloatingHelper.Content
-                                                body={
-                                                    <Box direction="vertical" gap="20px">
-                                                        <Text size="small" light>
-                                                            Include any information you would like mentioned, or any specific instructions.
-                                                        </Text>
-                                                        <Text size="small" light>
-                                                            For Example:
-                                                            <br />
-                                                            <ul>
-                                                                <li>Mention at least 5 times each of the following keywords "keyword 1", "keyword 2".</li>
-                                                                <li>List a few pros and cons</li>
-                                                                <li>Expand on the following point: You can only help those who want to help themselves.</li>
-                                                            </ul>
-                                                        </Text>
-                                                        <Box direction="horizontal" gap={"20px"}>
-                                                            <Button
-                                                                onClick={() => {
-                                                                    handlePreviousActionClick();
-                                                                }}
-                                                                skin="premium-light"
-                                                                size="small"
-                                                                priority="secondary"
-                                                            >
-                                                                Previous
-                                                            </Button>
-                                                            <Button
-                                                                onClick={() => {
-                                                                    handleHelperActionClick();
-                                                                }}
-                                                                skin="premium-light"
-                                                                size="small"
-                                                                priority="secondary"
-                                                            >
-                                                                Next
-                                                            </Button>
-                                                        </Box>
-                                                    </Box>
-                                                }
-                                            />
+                            <FloatingHelper
+                                opened={isHelperOpen && helperStep === (!content ? 3 : 2)}
+                                width={"280px"}
+                                onClose={helperClose}
+                                target={
+                                    <FormField label="Additional Information" charCount={3000 - additionalInfo.length} dataHook="gpt-additional-details">
+                                        <InputArea
+                                            value={additionalInfo}
+                                            onChange={handleAdditionalInfoChange}
+                                            rows={6}
+                                            placeholder="Include any information you would like mentioned, or any specific instructions."
+                                        />
+                                    </FormField>
+                                }
+                                content={
+                                    <FloatingHelper.Content
+                                        body={
+                                            <Box direction="vertical" gap="20px">
+                                                <Text size="small" light>
+                                                    Include any information you would like mentioned, or any specific instructions.
+                                                </Text>
+                                                <Text size="small" light>
+                                                    For Example:
+                                                    <br />
+                                                    <ul>
+                                                        <li>Mention at least 5 times each of the following keywords "keyword 1", "keyword 2".</li>
+                                                        <li>List a few pros and cons</li>
+                                                        <li>Expand on the following point: You can only help those who want to help themselves.</li>
+                                                    </ul>
+                                                </Text>
+                                                <Box direction="horizontal" gap={"20px"}>
+                                                    <Button
+                                                        onClick={() => {
+                                                            handlePreviousActionClick();
+                                                        }}
+                                                        skin="light"
+                                                        size="small"
+                                                        priority="secondary"
+                                                    >
+                                                        Previous
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => {
+                                                            handleHelperActionClick();
+                                                        }}
+                                                        skin="light"
+                                                        size="small"
+                                                        priority="secondary"
+                                                    >
+                                                        Next
+                                                    </Button>
+                                                </Box>
+                                            </Box>
                                         }
-                                        placement="bottom"
                                     />
                                 }
-                                dataHook="gpt-additional-details"
-                            >
-                                <InputArea value={additionalInfo} onChange={handleAdditionalInfoChange} rows={6} />
-                            </FormField>
+                                placement="bottom"
+                            />
                         </Cell>
                         <Cell span={12}>
                             <FormField
@@ -728,7 +756,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         opened={isHelperOpen && helperStep === (!content ? 4 : 3)}
                                         width={"280px"}
                                         onClose={helperClose}
-                                        target={selectedVersion == "3.5" ? "Each word uses approximately 1-2 tokens)." : "Each word uses approximately 5-10 tokens)."}
+                                        target={selectedVersion == "3.5" ? "Each word uses approximately 1-2 tokens." : "Each word uses approximately 5-10 tokens."}
                                         content={
                                             <FloatingHelper.Content
                                                 body={
@@ -741,7 +769,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -751,7 +779,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -790,7 +818,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -800,7 +828,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -850,7 +878,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -860,7 +888,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -945,7 +973,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handlePreviousActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -955,7 +983,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                                 onClick={() => {
                                                                     handleHelperActionClick();
                                                                 }}
-                                                                skin="premium-light"
+                                                                skin="light"
                                                                 size="small"
                                                                 priority="secondary"
                                                             >
@@ -1022,7 +1050,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         onClick={() => {
                                                             handlePreviousActionClick();
                                                         }}
-                                                        skin="premium-light"
+                                                        skin="light"
                                                         size="small"
                                                         priority="secondary"
                                                     >
@@ -1032,7 +1060,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                         onClick={() => {
                                                             handleHelperActionClick();
                                                         }}
-                                                        skin="premium-light"
+                                                        skin="light"
                                                         size="small"
                                                         priority="secondary"
                                                     >
