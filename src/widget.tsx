@@ -703,7 +703,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                             value={additionalInfo}
                                             onChange={handleAdditionalInfoChange}
                                             rows={6}
-                                            placeholder="Include any information you would like mentioned, or any specific instructions."
+                                            placeholder="Include any information you would like mentioned, or any specific instructions.
+* Counted as tokens"
                                         />
                                     </FormField>
                                 }
@@ -713,6 +714,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                             <Box direction="vertical" gap="20px">
                                                 <Text size="small" light>
                                                     Include any information you would like mentioned, or any specific instructions.
+                                                    <br />
+                                                    * Counted as tokens.
                                                 </Text>
                                                 <Text size="small" light>
                                                     For Example:
