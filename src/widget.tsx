@@ -144,12 +144,17 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     setAppData(data);
                     setPlanType(data.plan ? data.plan.charAt(0).toUpperCase() + data.plan.slice(1).toLowerCase() : "Free");
 
-                    const totalTokens = parseInt(data.totalTokens.replace(/,/g, ""));
-                    setTotalTokens(totalTokens);
+                    if (data.totalTokens == "Unlimited" && data.plan == "premium") {
+                        const totalTokens = data.totalTokens;
+                        setTotalTokens(totalTokens);
+                    } else {
+                        const totalTokens = parseInt(data.totalTokens.replace(/,/g, ""));
+                        setTotalTokens(totalTokens);
+                    }
                     const tokensUsage = parseInt(data.tokensUsage.replace(/,/g, ""));
-                    console.log("tokens usage", tokensUsage);
-                    // const remaining = totalTokens - tokensUsage;
                     setRemainingTokens(tokensUsage);
+
+                    // const remaining = totalTokens - tokensUsage;
 
                     if (data.blogTutorialFinished == 1) {
                         setIsHelperOpen(false);
@@ -523,7 +528,9 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     if ((appData as any)?.instance_id === false) {
         return <InstallationError />;
     }
-    
+
+    console.log("totalTokens", totalTokens);
+
     return (
         <ThemeProvider theme={theme({ active: true })}>
             <Card stretchVertically>
@@ -542,21 +549,21 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             <Card.Divider />
                             <Layout gap={"10px"}>
                                 <Cell></Cell>
-                                {planType.toLocaleLowerCase() !== "premium" && (
-                                    <Cell span={12}>
-                                        <FormField>
-                                            <Box align="space-between" width={"100%"} padding={"0 6px"}>
-                                                <Text size="small" skin="standard">
-                                                    Tokens
-                                                </Text>
-                                                <Text size="small" skin="standard">
-                                                    {remainingTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} of {totalTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                                                </Text>
-                                            </Box>
+                                <Cell span={12}>
+                                    <FormField>
+                                        <Box align="space-between" width={"100%"} padding={"0 6px"}>
+                                            <Text size="small" skin="standard">
+                                                Tokens
+                                            </Text>
+                                            <Text size="small" skin="standard">
+                                                {remainingTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} of {totalTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                            </Text>
+                                        </Box>
+                                        {planType.toLocaleLowerCase() !== "premium" && (
                                             <LinearProgressBar skin="premium" value={totalTokens && remainingTokens !== undefined ? 100 - ((totalTokens - remainingTokens) / totalTokens) * 100 : 0} />
-                                        </FormField>
-                                    </Cell>
-                                )}
+                                        )}
+                                    </FormField>
+                                </Cell>
                                 <Cell span={12}>
                                     <Box align="center" paddingTop={"10px"} gap={"20px"}>
                                         {planType.toLocaleLowerCase() !== "premium" && (
