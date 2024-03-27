@@ -523,7 +523,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     if ((appData as any)?.instance_id === false) {
         return <InstallationError />;
     }
-
+    
     return (
         <ThemeProvider theme={theme({ active: true })}>
             <Card stretchVertically>
@@ -542,38 +542,40 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             <Card.Divider />
                             <Layout gap={"10px"}>
                                 <Cell></Cell>
+                                {planType.toLocaleLowerCase() !== "premium" && (
+                                    <Cell span={12}>
+                                        <FormField>
+                                            <Box align="space-between" width={"100%"} padding={"0 6px"}>
+                                                <Text size="small" skin="standard">
+                                                    Tokens
+                                                </Text>
+                                                <Text size="small" skin="standard">
+                                                    {remainingTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} of {totalTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                                                </Text>
+                                            </Box>
+                                            <LinearProgressBar skin="premium" value={totalTokens && remainingTokens !== undefined ? 100 - ((totalTokens - remainingTokens) / totalTokens) * 100 : 0} />
+                                        </FormField>
+                                    </Cell>
+                                )}
                                 <Cell span={12}>
-                                    <FormField>
-                                        <Box align="space-between" width={"100%"} padding={"0 6px"}>
-                                            <Text size="small" skin="standard">
-                                                Tokens
-                                            </Text>
-                                            <Text size="small" skin="standard">
-                                                {remainingTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")} of {totalTokens?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                                            </Text>
-                                        </Box>
-                                        <LinearProgressBar skin="premium" value={totalTokens && remainingTokens !== undefined ? 100 - ((totalTokens - remainingTokens) / totalTokens) * 100 : 0} />
-                                    </FormField>
-                                </Cell>
-                                <Cell span={12}>
-                                    {planType !== "premium" && (
-                                        <Box align="center" paddingTop={"10px"} gap={"20px"}>
+                                    <Box align="center" paddingTop={"10px"} gap={"20px"}>
+                                        {planType.toLocaleLowerCase() !== "premium" && (
                                             <Button as="a" skin="premium" href={CONFIG.upgradeUrl} target="_blank" size="medium">
                                                 Upgrade
                                             </Button>
-                                            <Button
-                                                skin="dark"
-                                                priority="primary"
-                                                size="medium"
-                                                onClick={() => {
-                                                    setIsHelperOpen(true);
-                                                    setHelperStep(1);
-                                                }}
-                                            >
-                                                Tutorial
-                                            </Button>
-                                        </Box>
-                                    )}
+                                        )}
+                                        <Button
+                                            skin="dark"
+                                            priority="primary"
+                                            size="medium"
+                                            onClick={() => {
+                                                setIsHelperOpen(true);
+                                                setHelperStep(1);
+                                            }}
+                                        >
+                                            Tutorial
+                                        </Button>
+                                    </Box>
                                 </Cell>
                             </Layout>
                         </Card>
@@ -714,8 +716,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                             <Box direction="vertical" gap="20px">
                                                 <Text size="small" light>
                                                     Include any information you would like mentioned, or any specific instructions.
-                                                    <br />
-                                                    * Counted as tokens.
+                                                    <br />* Counted as tokens.
                                                 </Text>
                                                 <Text size="small" light>
                                                     For Example:
