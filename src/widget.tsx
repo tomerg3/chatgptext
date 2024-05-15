@@ -771,7 +771,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         opened={isHelperOpen && helperStep === (!content ? 4 : 3)}
                                         width={"280px"}
                                         onClose={helperClose}
-                                        target={selectedVersion == "3.5" ? "Each word uses approximately 1-2 tokens." : "Each word uses approximately 5-10 tokens."}
+                                        target={selectedVersion == "3.5" ? "Each word uses approximately 1-2 tokens." : "Each word uses approximately 2-4 tokens."}
                                         content={
                                             <FloatingHelper.Content
                                                 body={
@@ -1021,7 +1021,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             >
                                 <Dropdown selectedId={selectedVersion} options={versionOptions} onSelect={handleSelectVersion} />
                             </FormField>
-                            <Text weight="bold">{selectedVersion == "3.5" ? "1-2 tokens per word" : "5-10 tokens per word"}</Text>
+                            <Text weight="bold">{selectedVersion == "3.5" ? "1-2 tokens per word" : "2-4 tokens per word"}</Text>
                         </Cell>
                         <Cell span={12}>
                             <FloatingHelper
