@@ -358,11 +358,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 nodes: [
                                     {
                                         type: "TEXT",
-                                        id: "",
-                                        nodes: [],
                                         textData: {
                                             text: newParagraphTexts[textIndex],
-                                            decorations: [],
                                         },
                                     },
                                 ],
@@ -382,11 +379,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             nodes: [
                                 {
                                     type: "TEXT",
-                                    id: "",
-                                    nodes: [],
                                     textData: {
                                         text: paragraph + "\n",
-                                        decorations: [],
                                     },
                                 },
                             ],
