@@ -327,17 +327,22 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     const responseData = response.data.response;
                     let newRichContent;
 
+                    const generateId = () => Math.random().toString(36).substr(2, 9);
+
                     if (!content && selectedGenerateType == "rewrite") {
                         const newParagraphTexts = responseData.split("\n\n");
 
-                        let updatedNodes: { type: Node_Type; nodes: { textData: { text: string; decorations: never[] } }[] }[] = [];
+                        let updatedNodes: any[] = [];
                         let textIndex = 0;
 
                         allDefContent.nodes.forEach((node: any) => {
                             if (node.type === "PARAGRAPH" && textIndex < newParagraphTexts.length) {
-                                const updatedParagraph = { ...node };
+                                const updatedParagraph = { ...node, id: generateId(), paragraphData: { textStyle: { textAlignment: "AUTO" } } };
                                 if (updatedParagraph.nodes && updatedParagraph.nodes.length > 0 && updatedParagraph.nodes[0].type === "TEXT") {
                                     updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex];
+                                    updatedParagraph.nodes[0].type = "TEXT";
+                                    updatedParagraph.nodes[0].id = "";
+                                    updatedParagraph.nodes[0].nodes = [];
                                     textIndex++;
                                 }
                                 updatedNodes.push(updatedParagraph);
@@ -346,38 +351,55 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             }
                         });
 
-                        console.log("updatedNodes", updatedNodes);
-
                         for (; textIndex < newParagraphTexts.length; textIndex++) {
                             updatedNodes.push({
-                                type: Node_Type.PARAGRAPH,
+                                type: "PARAGRAPH",
+                                id: generateId(),
                                 nodes: [
                                     {
+                                        type: "TEXT",
+                                        id: "",
+                                        nodes: [],
                                         textData: {
                                             text: newParagraphTexts[textIndex],
                                             decorations: [],
                                         },
                                     },
                                 ],
+                                paragraphData: {
+                                    textStyle: {
+                                        textAlignment: "AUTO",
+                                    },
+                                },
                             });
                         }
 
-                        newRichContent = { nodes: updatedNodes };
+                        newRichContent = { nodes: updatedNodes, metadata: { version: 1, createdTimestamp: new Date().toISOString(), updatedTimestamp: new Date().toISOString(), id: generateId() } };
                     } else {
                         const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
-                            type: Node_Type.PARAGRAPH,
+                            type: "PARAGRAPH",
+                            id: generateId(),
                             nodes: [
                                 {
+                                    type: "TEXT",
+                                    id: "",
+                                    nodes: [],
                                     textData: {
                                         text: paragraph + "\n",
                                         decorations: [],
                                     },
                                 },
                             ],
+                            paragraphData: {
+                                textStyle: {
+                                    textAlignment: "AUTO",
+                                },
+                            },
                         }));
 
                         newRichContent = {
                             nodes: paragraphs,
+                            metadata: { version: 1, createdTimestamp: new Date().toISOString(), updatedTimestamp: new Date().toISOString(), id: generateId() },
                         };
                     }
 
@@ -430,11 +452,148 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     message: "Something went wrong, please refresh the page and try again.",
                     type: "error",
                 });
-                console.log("error genrating button:", error);
+                console.log("error generating button:", error);
                 setObserverLoader(false);
                 setWarningIsOpen(false);
             });
     };
+
+    // const generateButtonHandler = (event: { preventDefault: () => void }) => {
+    //     event.preventDefault();
+    //     setObserverLoader(true);
+    //     axios
+    //         .post(CONFIG.ajaxUrl, {
+    //             instance: getInstance(),
+    //             k: getAdminKey(),
+    //             action: "generateBlogDescription",
+    //             draftName: draftName,
+    //             additionalInfo: additionalInfo,
+    //             wordsNum: wordsNum,
+    //             style: selectedWritingStyle,
+    //             customStyle: customStyle,
+    //             targetAuidience: selectedOptions,
+    //             customAudience: customAudience,
+    //             gptVersion: selectedVersion,
+    //             ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
+    //             blogExtension: 1,
+    //         })
+    //         .then(async (response) => {
+    //             if (totalTokens && response.data.tokensUsage) {
+    //                 const tokensUsage = parseInt(response.data.tokensUsage);
+    //                 setRemainingTokens(tokensUsage);
+    //             }
+    //             if (response.data.response) {
+    //                 const responseData = response.data.response;
+    //                 let newRichContent;
+
+    //                 if (!content && selectedGenerateType == "rewrite") {
+    //                     const newParagraphTexts = responseData.split("\n\n");
+
+    //                     let updatedNodes: { type: Node_Type; nodes: { textData: { text: string; decorations: never[] } }[] }[] = [];
+    //                     let textIndex = 0;
+
+    //                     allDefContent.nodes.forEach((node: any) => {
+    //                         if (node.type === "PARAGRAPH" && textIndex < newParagraphTexts.length) {
+    //                             const updatedParagraph = { ...node };
+    //                             if (updatedParagraph.nodes && updatedParagraph.nodes.length > 0 && updatedParagraph.nodes[0].type === "TEXT") {
+    //                                 updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex];
+    //                                 textIndex++;
+    //                             }
+    //                             updatedNodes.push(updatedParagraph);
+    //                         } else if (node.type !== "PARAGRAPH") {
+    //                             updatedNodes.push(node);
+    //                         }
+    //                     });
+
+    //                     console.log("updatedNodes", updatedNodes);
+
+    //                     for (; textIndex < newParagraphTexts.length; textIndex++) {
+    //                         updatedNodes.push({
+    //                             type: Node_Type.PARAGRAPH,
+    //                             nodes: [
+    //                                 {
+    //                                     textData: {
+    //                                         text: newParagraphTexts[textIndex],
+    //                                         decorations: [],
+    //                                     },
+    //                                 },
+    //                             ],
+    //                         });
+    //                     }
+
+    //                     newRichContent = { nodes: updatedNodes };
+    //                 } else {
+    //                     const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
+    //                         type: Node_Type.PARAGRAPH,
+    //                         nodes: [
+    //                             {
+    //                                 textData: {
+    //                                     text: paragraph + "\n",
+    //                                     decorations: [],
+    //                                 },
+    //                             },
+    //                         ],
+    //                     }));
+
+    //                     newRichContent = {
+    //                         nodes: paragraphs,
+    //                     };
+    //                 }
+
+    //                 props.setPostContent(newRichContent);
+    //                 props.setPostTitle(draftName);
+
+    //                 setObserverLoader(false);
+    //             }
+    //             return response.data;
+    //         })
+    //         .then((data) => {
+    //             if (!data || data.error) {
+    //                 if (data.error) {
+    //                     if (typeof data.planWarning !== "undefined" && data.planWarning) {
+    //                         showToast({
+    //                             message: data.error,
+    //                             type: "error",
+    //                             action: {
+    //                                 uiType: "link",
+    //                                 text: "Upgrade",
+    //                                 removeToastOnClick: true,
+    //                                 onClick: () => {
+    //                                     window.open(CONFIG.upgradeUrl, "_blank");
+    //                                 },
+    //                             },
+    //                         });
+    //                     } else {
+    //                         showToast({
+    //                             message: data.error,
+    //                             type: "error",
+    //                         });
+    //                     }
+    //                 } else {
+    //                     showToast({
+    //                         message: "Something went wrong, please refresh the page and try again.",
+    //                         type: "error",
+    //                     });
+    //                 }
+    //             } else {
+    //                 showToast({
+    //                     message: "Content successfully generated.",
+    //                     type: "success",
+    //                 });
+    //             }
+    //             setWarningIsOpen(false);
+    //             setObserverLoader(false);
+    //         })
+    //         .catch((error) => {
+    //             showToast({
+    //                 message: "Something went wrong, please refresh the page and try again.",
+    //                 type: "error",
+    //             });
+    //             console.log("error genrating button:", error);
+    //             setObserverLoader(false);
+    //             setWarningIsOpen(false);
+    //         });
+    // };
 
     const handleHelperActionClick = () => {
         if (!content ? helperStep <= 8 : helperStep <= 7) {
