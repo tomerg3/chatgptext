@@ -178,6 +178,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
 
                 setAllDefContent(postContent);
 
+                console.log("postContent", postContent)
+
                 //extracting text
                 const extractTexts = (nodes: any[]) => {
                     let texts: any[] = [];
@@ -302,6 +304,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const generateButtonHandler = (event: { preventDefault: () => void }) => {
         event.preventDefault();
         setObserverLoader(true);
+
         axios
             .post(CONFIG.ajaxUrl, {
                 instance: getInstance(),
@@ -325,11 +328,26 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 }
                 if (response.data.response) {
                     const responseData = response.data.response;
+                    console.log("responseData", responseData)
                     let newRichContent;
 
                     const generateId = () => Math.random().toString(36).substr(2, 9);
 
-                    if (!content && selectedGenerateType == "rewrite") {
+                    const extractImages = (nodes: any[]) => {
+                        let images: any[] = [];
+                        nodes.forEach((node) => {
+                            if (node.type === "IMAGE" && node.imageData?.image?.src) {
+                                images.push(node);
+                            }
+                        });
+                        return images;
+                    };
+
+                    const allImages = extractImages(allDefContent.nodes);
+
+                    console.log("allImages", allImages)
+
+                    if (!content && selectedGenerateType === "rewrite") {
                         const newParagraphTexts = responseData.split("\n\n");
 
                         let updatedNodes: any[] = [];
@@ -358,8 +376,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 nodes: [
                                     {
                                         type: "TEXT",
+                                        id: "",
+                                        nodes: [],
                                         textData: {
                                             text: newParagraphTexts[textIndex],
+                                            decorations: [],
                                         },
                                     },
                                 ],
@@ -371,7 +392,12 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             });
                         }
 
-                        newRichContent = { nodes: updatedNodes, metadata: { version: 1, createdTimestamp: new Date().toISOString(), updatedTimestamp: new Date().toISOString(), id: generateId() } };
+                        newRichContent = {
+                            nodes: [...updatedNodes, ...allImages],
+                            metadata: { version: 1, createdTimestamp: new Date().toISOString(), updatedTimestamp: new Date().toISOString(), id: generateId() },
+                        };
+
+                        console.log("newRichContent rewrite", newRichContent)
                     } else {
                         const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
                             type: "PARAGRAPH",
@@ -379,8 +405,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             nodes: [
                                 {
                                     type: "TEXT",
+                                    id: "",
+                                    nodes: [],
                                     textData: {
                                         text: paragraph + "\n",
+                                        decorations: [],
                                     },
                                 },
                             ],
@@ -392,9 +421,11 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                         }));
 
                         newRichContent = {
-                            nodes: paragraphs,
+                            nodes: [...paragraphs, ...allImages],
                             metadata: { version: 1, createdTimestamp: new Date().toISOString(), updatedTimestamp: new Date().toISOString(), id: generateId() },
                         };
+
+                        console.log("newRichContent", newRichContent)
                     }
 
                     props.setPostContent(newRichContent);
@@ -451,143 +482,6 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 setWarningIsOpen(false);
             });
     };
-
-    // const generateButtonHandler = (event: { preventDefault: () => void }) => {
-    //     event.preventDefault();
-    //     setObserverLoader(true);
-    //     axios
-    //         .post(CONFIG.ajaxUrl, {
-    //             instance: getInstance(),
-    //             k: getAdminKey(),
-    //             action: "generateBlogDescription",
-    //             draftName: draftName,
-    //             additionalInfo: additionalInfo,
-    //             wordsNum: wordsNum,
-    //             style: selectedWritingStyle,
-    //             customStyle: customStyle,
-    //             targetAuidience: selectedOptions,
-    //             customAudience: customAudience,
-    //             gptVersion: selectedVersion,
-    //             ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
-    //             blogExtension: 1,
-    //         })
-    //         .then(async (response) => {
-    //             if (totalTokens && response.data.tokensUsage) {
-    //                 const tokensUsage = parseInt(response.data.tokensUsage);
-    //                 setRemainingTokens(tokensUsage);
-    //             }
-    //             if (response.data.response) {
-    //                 const responseData = response.data.response;
-    //                 let newRichContent;
-
-    //                 if (!content && selectedGenerateType == "rewrite") {
-    //                     const newParagraphTexts = responseData.split("\n\n");
-
-    //                     let updatedNodes: { type: Node_Type; nodes: { textData: { text: string; decorations: never[] } }[] }[] = [];
-    //                     let textIndex = 0;
-
-    //                     allDefContent.nodes.forEach((node: any) => {
-    //                         if (node.type === "PARAGRAPH" && textIndex < newParagraphTexts.length) {
-    //                             const updatedParagraph = { ...node };
-    //                             if (updatedParagraph.nodes && updatedParagraph.nodes.length > 0 && updatedParagraph.nodes[0].type === "TEXT") {
-    //                                 updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex];
-    //                                 textIndex++;
-    //                             }
-    //                             updatedNodes.push(updatedParagraph);
-    //                         } else if (node.type !== "PARAGRAPH") {
-    //                             updatedNodes.push(node);
-    //                         }
-    //                     });
-
-    //                     console.log("updatedNodes", updatedNodes);
-
-    //                     for (; textIndex < newParagraphTexts.length; textIndex++) {
-    //                         updatedNodes.push({
-    //                             type: Node_Type.PARAGRAPH,
-    //                             nodes: [
-    //                                 {
-    //                                     textData: {
-    //                                         text: newParagraphTexts[textIndex],
-    //                                         decorations: [],
-    //                                     },
-    //                                 },
-    //                             ],
-    //                         });
-    //                     }
-
-    //                     newRichContent = { nodes: updatedNodes };
-    //                 } else {
-    //                     const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
-    //                         type: Node_Type.PARAGRAPH,
-    //                         nodes: [
-    //                             {
-    //                                 textData: {
-    //                                     text: paragraph + "\n",
-    //                                     decorations: [],
-    //                                 },
-    //                             },
-    //                         ],
-    //                     }));
-
-    //                     newRichContent = {
-    //                         nodes: paragraphs,
-    //                     };
-    //                 }
-
-    //                 props.setPostContent(newRichContent);
-    //                 props.setPostTitle(draftName);
-
-    //                 setObserverLoader(false);
-    //             }
-    //             return response.data;
-    //         })
-    //         .then((data) => {
-    //             if (!data || data.error) {
-    //                 if (data.error) {
-    //                     if (typeof data.planWarning !== "undefined" && data.planWarning) {
-    //                         showToast({
-    //                             message: data.error,
-    //                             type: "error",
-    //                             action: {
-    //                                 uiType: "link",
-    //                                 text: "Upgrade",
-    //                                 removeToastOnClick: true,
-    //                                 onClick: () => {
-    //                                     window.open(CONFIG.upgradeUrl, "_blank");
-    //                                 },
-    //                             },
-    //                         });
-    //                     } else {
-    //                         showToast({
-    //                             message: data.error,
-    //                             type: "error",
-    //                         });
-    //                     }
-    //                 } else {
-    //                     showToast({
-    //                         message: "Something went wrong, please refresh the page and try again.",
-    //                         type: "error",
-    //                     });
-    //                 }
-    //             } else {
-    //                 showToast({
-    //                     message: "Content successfully generated.",
-    //                     type: "success",
-    //                 });
-    //             }
-    //             setWarningIsOpen(false);
-    //             setObserverLoader(false);
-    //         })
-    //         .catch((error) => {
-    //             showToast({
-    //                 message: "Something went wrong, please refresh the page and try again.",
-    //                 type: "error",
-    //             });
-    //             console.log("error genrating button:", error);
-    //             setObserverLoader(false);
-    //             setWarningIsOpen(false);
-    //         });
-    // };
 
     const handleHelperActionClick = () => {
         if (!content ? helperStep <= 8 : helperStep <= 7) {
@@ -681,8 +575,6 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     if ((appData as any)?.instance_id === false) {
         return <InstallationError />;
     }
-
-    console.log("totalTokens", totalTokens);
 
     return (
         <ThemeProvider theme={theme({ active: true })}>
