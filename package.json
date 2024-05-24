@@ -21,6 +21,7 @@
   "dependencies": {
     "@wix/dashboard-sdk": "^3.20.0",
     "axios": "^1.6.7",
+    "language-name-map": "^0.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "ricos-schema": "^10.5.2",
@@ -31,6 +32,7 @@
     "@stylable/cli": "^5.2.1",
     "@stylable/runtime": "^5.2.1",
     "@stylable/webpack-plugin": "^5.2.1",
+    "@types/language-name-map": "^0.3.4",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@typescript-eslint/eslint-plugin": "^5.39.0",

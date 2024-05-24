@@ -31,6 +31,7 @@ import { CrashedApp, InstallationError, PageLoader } from "./WarningScreens/Warn
 import { Node_Type } from "ricos-schema";
 import { writingOptions, servicesOptions, generateType } from "./dropdowns";
 import { DashboardWidgetProps } from "./blogApp";
+import { getLangNameFromCode } from "language-name-map";
 
 interface scrollIntoViewOptions {
     behavior: "auto" | "smooth" | "instant";
@@ -38,9 +39,18 @@ interface scrollIntoViewOptions {
     inline?: "start" | "center" | "end" | "nearest";
 }
 
+interface AppData {
+    wixLanguages: any;
+    locale: any;
+    plan?: any;
+    totalTokens?: any;
+    tokensUsage?: any;
+    blogTutorialFinished?: any;
+}
+
 export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [isAppCrashed, setIsAppCrashed] = useState(false);
-    const [appData, setAppData] = useState(false);
+    const [appData, setAppData] = useState<AppData | null>(null); // Initialize as null
     const [planType, setPlanType] = useState<string>("");
     const [remainingTokens, setRemainingTokens] = useState<number>();
     const [totalTokens, setTotalTokens] = useState<number>();
@@ -52,6 +62,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [content, setContent] = useState(true);
     const [warningIsOpen, setWarningIsOpen] = useState(false);
     const [observerLoader, setObserverLoader] = useState(false);
+
+    const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
 
     const [defaultContent, setDefaulContent] = useState<any>();
     // const [images, setImages] = useState<any>();
@@ -297,6 +309,18 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         return option ? option.help : "Default help message";
     }
 
+    const languageHandler = (option: DropdownLayoutValueOption) => {
+        setSelectedLanguage(option.id as string);
+    };
+
+    const languageOptions =
+        appData?.wixLanguages?.isMultiLingual && appData?.wixLanguages?.supportedLanguages?.length > 0
+            ? appData.wixLanguages.supportedLanguages.map(({ languageCode }: { languageCode: string }) => {
+                  const lang = getLangNameFromCode(languageCode);
+                  return { id: languageCode, value: lang ? lang.name : languageCode };
+              })
+            : [{ id: appData?.locale, value: getLangNameFromCode(appData?.locale)?.name || appData?.locale }];
+
     const generateButtonHandlerWrapper = () => {
         generateButtonHandler({ preventDefault: () => {} });
     };
@@ -320,6 +344,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 gptVersion: selectedVersion,
                 ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
                 blogExtension: 1,
+                selectedLanguage: selectedLanguage,
             })
             .then(async (response) => {
                 if (totalTokens && response.data.tokensUsage) {
@@ -1094,6 +1119,13 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                             </FormField>
                             <Text weight="bold">{selectedVersion == "3.5" ? "1-2 tokens per word" : "2-3 tokens per word"}</Text>
                         </Cell>
+
+                        <Cell span={12}>
+                            <FormField label="Select Language">
+                                <Dropdown selectedId={selectedLanguage} options={languageOptions} onSelect={languageHandler} />
+                            </FormField>
+                        </Cell>
+
                         <Cell span={12}>
                             <FloatingHelper
                                 opened={isHelperOpen && helperStep === (!content ? 8 : 7)}
