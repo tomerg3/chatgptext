@@ -178,7 +178,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
 
                 setAllDefContent(postContent);
 
-                console.log("postContent", postContent)
+                console.log("postContent", postContent);
 
                 //extracting text
                 const extractTexts = (nodes: any[]) => {
@@ -304,7 +304,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const generateButtonHandler = (event: { preventDefault: () => void }) => {
         event.preventDefault();
         setObserverLoader(true);
-    
+
         axios
             .post(CONFIG.ajaxUrl, {
                 instance: getInstance(),
@@ -330,9 +330,9 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                     const responseData = response.data.response;
                     console.log("responseData", responseData);
                     let newRichContent;
-    
+
                     const generateId = () => Math.random().toString(36).substr(2, 9);
-    
+
                     const extractImageAndPosition = (nodes: any[]) => {
                         let imageNode = null;
                         let imagePosition = null;
@@ -344,24 +344,23 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                         });
                         return { imageNode, imagePosition };
                     };
-    
-                    const { imageNode, imagePosition } = extractImageAndPosition(allDefContent.nodes);
-                    console.log("imageNode", imageNode);
-                    console.log("imagePosition", imagePosition);
-    
-                    const nodesWithoutImage = allDefContent.nodes.filter((node: { type: string; }) => node.type !== "IMAGE");
-    
+
                     if (!content && selectedGenerateType === "rewrite") {
                         const newParagraphTexts = responseData.split("\n\n");
-    
+
+                        console.log("newParagraphTexts", newParagraphTexts);
+
+                        const { imageNode, imagePosition } = extractImageAndPosition(allDefContent.nodes);
+                        const nodesWithoutImage = allDefContent.nodes.filter((node: { type: string }) => node.type !== "IMAGE");
+
                         let updatedNodes: any[] = [];
                         let textIndex = 0;
-    
+
                         nodesWithoutImage.forEach((node: any) => {
                             if (node.type === "PARAGRAPH" && textIndex < newParagraphTexts.length) {
                                 const updatedParagraph = { ...node, id: generateId(), paragraphData: { textStyle: { textAlignment: "AUTO" } } };
                                 if (updatedParagraph.nodes && updatedParagraph.nodes.length > 0 && updatedParagraph.nodes[0].type === "TEXT") {
-                                    updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex];
+                                    updatedParagraph.nodes[0].textData.text = newParagraphTexts[textIndex] + "\n";
                                     updatedParagraph.nodes[0].type = "TEXT";
                                     updatedParagraph.nodes[0].id = "";
                                     updatedParagraph.nodes[0].nodes = [];
@@ -372,7 +371,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 updatedNodes.push(node);
                             }
                         });
-    
+
                         for (; textIndex < newParagraphTexts.length; textIndex++) {
                             updatedNodes.push({
                                 type: "PARAGRAPH",
@@ -395,16 +394,16 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 },
                             });
                         }
-    
+
                         if (imageNode && imagePosition !== null) {
                             updatedNodes.splice(imagePosition, 0, imageNode);
                         }
-    
+
                         newRichContent = {
                             nodes: updatedNodes,
                             metadata: { version: 1, createdTimestamp: new Date().toISOString(), updatedTimestamp: new Date().toISOString(), id: generateId() },
                         };
-    
+
                         console.log("newRichContent rewrite", newRichContent);
                     } else {
                         const paragraphs = responseData.split("\n\n").map((paragraph: string) => ({
@@ -427,22 +426,37 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                 },
                             },
                         }));
-    
-                        // if (imageNode && imagePosition !== null) {
-                        //     paragraphs.splice(imagePosition, 0, imageNode);
-                        // }
-    
+
                         newRichContent = {
                             nodes: paragraphs,
                             metadata: { version: 1, createdTimestamp: new Date().toISOString(), updatedTimestamp: new Date().toISOString(), id: generateId() },
                         };
-    
+
                         console.log("newRichContent", newRichContent);
                     }
-    
+
                     props.setPostContent(newRichContent);
                     props.setPostTitle(draftName);
-    
+                    setAllDefContent(newRichContent);
+
+                    //extracting text
+                    const extractTexts = (nodes: any[]) => {
+                        let texts: any[] = [];
+                        nodes.forEach((node) => {
+                            if (node.type === "TEXT" && node.textData) {
+                                texts.push(node.textData.text);
+                            } else if (node.nodes && node.nodes.length > 0) {
+                                texts = texts.concat(extractTexts(node.nodes));
+                            }
+                        });
+
+                        return texts;
+                    };
+
+                    const allTexts = extractTexts(newRichContent.nodes);
+                    const combinedText = allTexts.join(" ");
+                    setDefaulContent(combinedText);
+
                     setObserverLoader(false);
                 }
                 return response.data;
@@ -494,8 +508,6 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 setWarningIsOpen(false);
             });
     };
-    
-    
 
     const handleHelperActionClick = () => {
         if (!content ? helperStep <= 8 : helperStep <= 7) {
