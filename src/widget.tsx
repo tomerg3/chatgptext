@@ -50,7 +50,7 @@ interface AppData {
 
 export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [isAppCrashed, setIsAppCrashed] = useState(false);
-    const [appData, setAppData] = useState<AppData | null>(null); // Initialize as null
+    const [appData, setAppData] = useState<AppData | null>(null);
     const [planType, setPlanType] = useState<string>("");
     const [remainingTokens, setRemainingTokens] = useState<number>();
     const [totalTokens, setTotalTokens] = useState<number>();
