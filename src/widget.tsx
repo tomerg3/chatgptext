@@ -192,40 +192,39 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
 
                 console.log("postContent", postContent);
 
-                //extracting text
-                const extractTexts = (nodes: any[]) => {
-                    let texts: any[] = [];
-                    nodes.forEach((node) => {
-                        if (node.type === "TEXT" && node.textData) {
-                            texts.push(node.textData.text);
-                        } else if (node.nodes && node.nodes.length > 0) {
-                            texts = texts.concat(extractTexts(node.nodes));
-                        }
-                    });
-
-                    return texts;
-                };
-
-                const allTexts = extractTexts(postContent.nodes);
-                const combinedText = allTexts.join(" ");
-
-                // const extractImages = (nodes: any[]) => {
-                //     let images: any[] = [];
-                //     nodes.forEach((node) => {
-                //         if (node.type === "IMAGE") {
-                //             images.push({ id: node.id, data: node.imageData.image });
-                //         }
-                //     });
-                //     return images;
-                // };
-
-                // const allImages = extractImages(postContent.nodes);
-                // console.log(allImages);
-                // setImages(allImages);
-
-                setDefaulContent(combinedText);
-
                 if (postContent && postContent.nodes) {
+                    //extracting text
+                    const extractTexts = (nodes: any[]) => {
+                        let texts: any[] = [];
+                        nodes.forEach((node) => {
+                            if (node.type === "TEXT" && node.textData) {
+                                texts.push(node.textData.text);
+                            } else if (node.nodes && node.nodes.length > 0) {
+                                texts = texts.concat(extractTexts(node.nodes));
+                            }
+                        });
+
+                        return texts;
+                    };
+                    const allTexts = extractTexts(postContent.nodes);
+                    const combinedText = allTexts.join(" ");
+
+                    // const extractImages = (nodes: any[]) => {
+                    //     let images: any[] = [];
+                    //     nodes.forEach((node) => {
+                    //         if (node.type === "IMAGE") {
+                    //             images.push({ id: node.id, data: node.imageData.image });
+                    //         }
+                    //     });
+                    //     return images;
+                    // };
+
+                    // const allImages = extractImages(postContent.nodes);
+                    // console.log(allImages);
+                    // setImages(allImages);
+
+                    setDefaulContent(combinedText);
+
                     (postContent.nodes as any[]).forEach((paragraph) => {
                         if (paragraph.type === "PARAGRAPH" && paragraph.nodes.length > 0) {
                             const hasNonEmptyText = paragraph.nodes.some((node: any) => {
