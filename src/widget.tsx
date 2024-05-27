@@ -23,6 +23,7 @@ import {
     SectionHelper,
     TagList,
     LinearProgressBar,
+    AutoComplete,
 } from "wix-style-react";
 import { theme } from "wix-style-react/themes/businessDashboard";
 import CONFIG from "../data/app-config";
@@ -31,7 +32,7 @@ import { CrashedApp, InstallationError, PageLoader } from "./WarningScreens/Warn
 import { Node_Type } from "ricos-schema";
 import { writingOptions, servicesOptions, generateType } from "./dropdowns";
 import { DashboardWidgetProps } from "./blogApp";
-import { getLangNameFromCode } from "language-name-map";
+import { getLangNameFromCode, getLangCodeList } from "language-name-map";
 
 interface scrollIntoViewOptions {
     behavior: "auto" | "smooth" | "instant";
@@ -63,7 +64,10 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [warningIsOpen, setWarningIsOpen] = useState(false);
     const [observerLoader, setObserverLoader] = useState(false);
 
-    const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
+    const [languageOptions, setLanguageOptions] = useState<any>([]);
+    const [selectedLanguage, setSelectedLanguage] = useState<any>("en");
+    const [fullLanguageName, setFullLanguageName] = useState<any>("");
+    const [searchValue, setSearchValue] = useState<any>("");
 
     const [defaultContent, setDefaulContent] = useState<any>();
     // const [images, setImages] = useState<any>();
@@ -96,6 +100,21 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         ...option,
         disabled: option.id == "general" ? selectedOptions.length > 0 : false,
     }));
+
+    useEffect(() => {
+        const fetchLanguages = async () => {
+            const langCodes = getLangCodeList();
+            const langOptions = langCodes
+                .map((code) => {
+                    const lang = getLangNameFromCode(code);
+                    return lang ? { id: code, value: lang.name } : null;
+                })
+                .filter((option) => option !== null);
+            setLanguageOptions(langOptions);
+        };
+
+        fetchLanguages();
+    }, []);
 
     const customAudienceHandler = (event: React.KeyboardEvent<HTMLInputElement>) => {
         const target = event.target as HTMLInputElement;
@@ -308,17 +327,21 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         return option ? option.help : "Default help message";
     }
 
-    const languageHandler = (option: DropdownLayoutValueOption) => {
-        setSelectedLanguage(option.id as string);
-    };
+    useEffect(() => {
+        if (appData?.locale) {
+            const lang = getLangNameFromCode(appData.locale);
+            if (lang) {
+                setSelectedLanguage(appData.locale);
+                setSearchValue(lang.name);
+                setFullLanguageName(lang.name);
+            }
+        }
+    }, [appData?.locale]);
 
-    const languageOptions =
-        appData?.wixLanguages?.isMultiLingual && appData?.wixLanguages?.supportedLanguages?.length > 0
-            ? appData.wixLanguages.supportedLanguages.map(({ languageCode }: { languageCode: string }) => {
-                  const lang = getLangNameFromCode(languageCode);
-                  return { id: languageCode, value: lang ? lang.name : languageCode };
-              })
-            : [{ id: appData?.locale, value: getLangNameFromCode(appData?.locale)?.name || appData?.locale }];
+    function includesCaseInsensitive(a: any = "", b: any = ""): boolean {
+        return !b || a.toLowerCase().indexOf(b.toLowerCase()) !== -1;
+    }
+    
 
     const generateButtonHandlerWrapper = () => {
         generateButtonHandler({ preventDefault: () => {} });
@@ -344,6 +367,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
                 blogExtension: 1,
                 selectedLanguage: selectedLanguage,
+                fullLanguageName: fullLanguageName
             })
             .then(async (response) => {
                 if (totalTokens && response.data.tokensUsage) {
@@ -534,14 +558,14 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     };
 
     const handleHelperActionClick = () => {
-        if (!content ? helperStep <= 8 : helperStep <= 7) {
+        if (!content ? helperStep <= 9 : helperStep <= 8) {
             setHelperStep((step) => step + 1);
         } else {
             setIsHelperOpen(false);
         }
     };
     const handlePreviousActionClick = () => {
-        if (!content ? helperStep <= 8 : helperStep <= 7) {
+        if (!content ? helperStep <= 9 : helperStep <= 8) {
             setHelperStep((step) => Math.max(1, step - 1));
         } else {
             setIsHelperOpen(false);
@@ -1062,6 +1086,78 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         opened={isHelperOpen && helperStep === (!content ? 7 : 6)}
                                         width={"280px"}
                                         onClose={helperClose}
+                                        target="Select Language"
+                                        content={
+                                            <FloatingHelper.Content
+                                                body={
+                                                    <Box direction="vertical" gap="20px">
+                                                        <Text size="small" light>
+                                                            {" "}
+                                                            Select the ChatGPT version to use{" "}
+                                                        </Text>
+                                                        <Text size="small" light>
+                                                            3.5 (Basic version) provides proficient text generation with a solid foundation of understanding and creativity
+                                                        </Text>
+                                                        <Text size="small" light>
+                                                            4 (Advanced version) offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate
+                                                            information.
+                                                        </Text>
+                                                        <Box direction="horizontal" gap={"20px"}>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handlePreviousActionClick();
+                                                                }}
+                                                                skin="light"
+                                                                size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Previous
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    handleHelperActionClick();
+                                                                }}
+                                                                skin="light"
+                                                                size="small"
+                                                                priority="secondary"
+                                                            >
+                                                                Next
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                }
+                                            />
+                                        }
+                                        placement="top"
+                                    />
+                                }
+                                statusMessage="Selevct language for your blog."
+                                dataHook="gpt-language"
+                            >
+                                <AutoComplete
+                                    placeholder="Select Language"
+                                    maxHeightPixels="150px"
+                                    options={languageOptions}
+                                    selectedId={selectedLanguage}
+                                    value={searchValue}
+                                    onSelect={(option) => {
+                                        setSearchValue(option.value);
+                                        setSelectedLanguage(option.id);
+                                        setFullLanguageName(option.value);
+                                    }}
+                                    onChange={(event) => setSearchValue(event.target.value)}
+                                    predicate={(option) => includesCaseInsensitive(option.value, searchValue.trim())}
+                                />
+                            </FormField>
+                        </Cell>
+
+                        <Cell span={12}>
+                            <FormField
+                                label={
+                                    <FloatingHelper
+                                        opened={isHelperOpen && helperStep === (!content ? 8 : 7)}
+                                        width={"280px"}
+                                        onClose={helperClose}
                                         target="ChatGPT Version"
                                         content={
                                             <FloatingHelper.Content
@@ -1120,14 +1216,8 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                         </Cell>
 
                         <Cell span={12}>
-                            <FormField label="Select Language">
-                                <Dropdown selectedId={selectedLanguage} options={languageOptions} onSelect={languageHandler} />
-                            </FormField>
-                        </Cell>
-
-                        <Cell span={12}>
                             <FloatingHelper
-                                opened={isHelperOpen && helperStep === (!content ? 8 : 7)}
+                                opened={isHelperOpen && helperStep === (!content ? 9 : 8)}
                                 width={"280px"}
                                 onClose={helperClose}
                                 target={
