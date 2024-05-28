@@ -341,7 +341,6 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     function includesCaseInsensitive(a: any = "", b: any = ""): boolean {
         return !b || a.toLowerCase().indexOf(b.toLowerCase()) !== -1;
     }
-    
 
     const generateButtonHandlerWrapper = () => {
         generateButtonHandler({ preventDefault: () => {} });
@@ -367,7 +366,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                 ...(!content && { generateType: selectedGenerateType, postContent: defaultContent }),
                 blogExtension: 1,
                 selectedLanguage: selectedLanguage,
-                fullLanguageName: fullLanguageName
+                fullLanguageName: fullLanguageName,
             })
             .then(async (response) => {
                 if (totalTokens && response.data.tokensUsage) {
@@ -1091,17 +1090,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                             <FloatingHelper.Content
                                                 body={
                                                     <Box direction="vertical" gap="20px">
-                                                        <Text size="small" light>
-                                                            {" "}
-                                                            Select the ChatGPT version to use{" "}
-                                                        </Text>
-                                                        <Text size="small" light>
-                                                            3.5 (Basic version) provides proficient text generation with a solid foundation of understanding and creativity
-                                                        </Text>
-                                                        <Text size="small" light>
-                                                            4 (Advanced version) offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate
-                                                            information.
-                                                        </Text>
+                                                        <Text size="small" light>Select the language for the content to be generated</Text>
                                                         <Box direction="horizontal" gap={"20px"}>
                                                             <Button
                                                                 onClick={() => {
