@@ -1120,7 +1120,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         placement="top"
                                     />
                                 }
-                                statusMessage="Selevct language for your blog."
+                                statusMessage="Select the language for the content."
                                 dataHook="gpt-language"
                             >
                                 <AutoComplete
