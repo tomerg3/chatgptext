@@ -310,6 +310,12 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
         setSelectedVersion(option.id as string);
     };
 
+    useEffect(() => {
+        if(selectedLanguage != 'en'){
+            setSelectedVersion('4');
+        }
+    }, [selectedLanguage])
+
     const handleCustomStyleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setCustomStyle(e.target.value);
     };
@@ -1090,7 +1096,9 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                             <FloatingHelper.Content
                                                 body={
                                                     <Box direction="vertical" gap="20px">
-                                                        <Text size="small" light>Select the language for the content to be generated</Text>
+                                                        <Text size="small" light>
+                                                            Select the language for the content to be generated
+                                                        </Text>
                                                         <Box direction="horizontal" gap={"20px"}>
                                                             <Button
                                                                 onClick={() => {
@@ -1120,7 +1128,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         placement="top"
                                     />
                                 }
-                                statusMessage="Select the language for the content."
+                                statusMessage="For optimal result use GPT-4 when using non-English languages"
                                 dataHook="gpt-language"
                             >
                                 <AutoComplete
