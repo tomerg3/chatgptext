@@ -1128,7 +1128,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         placement="top"
                                     />
                                 }
-                                statusMessage="For optimal result use GPT-4 when using non-English languages"
+                                statusMessage="For optimal results use GPT-4 when using non-English languages"
                                 dataHook="gpt-language"
                             >
                                 <AutoComplete
