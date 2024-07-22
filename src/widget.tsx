@@ -80,17 +80,17 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
     const [customStyle, setCustomStyle] = useState<string>("");
     const writingStylesOptions = writingOptions;
 
-    const [selectedVersion, setSelectedVersion] = useState<string>("3.5");
+    const [selectedVersion, setSelectedVersion] = useState<string>("4-mini");
     const versionOptions = [
         {
-            id: "3.5",
-            value: "3.5: Basic Version",
-            help: "GPT-3.5 provides proficient text generation with a solid foundation of understanding and creativity.",
+            id: "4-mini", 
+            value: "4-mini: Efficient Version",
+            help: "Faster, versatile model for quick and reliable content generation.",
         },
         {
-            id: "4",
-            value: "4: Advanced Version",
-            help: "GPT-4 offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information.",
+            id: "4o",
+            value: "4o: Advanced Version",
+            help: "Latest model with high-quality translation and the most up-to-date features.",
         },
     ];
 
@@ -895,7 +895,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         opened={isHelperOpen && helperStep === (!content ? 4 : 3)}
                                         width={"280px"}
                                         onClose={helperClose}
-                                        target={selectedVersion == "3.5" ? "Each word uses approximately 1-2 tokens." : "Each word uses approximately 2-3 tokens."}
+                                        target={selectedVersion == "4-mini" ? "Each word uses approximately 1-2 tokens." : "Each word uses approximately 2-3 tokens."}
                                         content={
                                             <FloatingHelper.Content
                                                 body={
@@ -1128,7 +1128,7 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                         placement="top"
                                     />
                                 }
-                                statusMessage="For optimal results use GPT-4 when using non-English languages"
+                                statusMessage="For optimal results use GPT-4o (Advanced version) when using non-English languages"
                                 dataHook="gpt-language"
                             >
                                 <AutoComplete
@@ -1165,11 +1165,10 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                             Select the ChatGPT version to use{" "}
                                                         </Text>
                                                         <Text size="small" light>
-                                                            3.5 (Basic version) provides proficient text generation with a solid foundation of understanding and creativity
+                                                            4-mini (Efficient version) Faster, versatile model for quick and reliable content generation.
                                                         </Text>
                                                         <Text size="small" light>
-                                                            4 (Advanced version) offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate
-                                                            information.
+                                                            4o (Advanced version) Latest model with high-quality translation and the most up-to-date features.
                                                         </Text>
                                                         <Box direction="horizontal" gap={"20px"}>
                                                             <Button
@@ -1201,15 +1200,15 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                     />
                                 }
                                 statusMessage={
-                                    selectedVersion == "3.5"
-                                        ? "GPT-3.5 provides proficient text generation with a solid foundation of understanding and creativity."
-                                        : "GPT-4 offers enhanced understanding, more coherent responses, and an improved ability to provide detailed and accurate information."
+                                    selectedVersion == "4-mini"
+                                        ? "Faster, versatile model for quick and reliable content generation."
+                                        : "Latest model with high-quality translation and the most up-to-date features."
                                 }
                                 dataHook="gpt-version"
                             >
                                 <Dropdown selectedId={selectedVersion} options={versionOptions} onSelect={handleSelectVersion} />
                             </FormField>
-                            <Text weight="bold">{selectedVersion == "3.5" ? "1-2 tokens per word" : "2-3 tokens per word"}</Text>
+                            <Text weight="bold">{selectedVersion == "4-mini" ? "1-2 tokens per word" : "2-3 tokens per word"}</Text>
                         </Cell>
 
                         <Cell span={12}>
