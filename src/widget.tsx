@@ -1165,10 +1165,10 @@ export const Widget: FC<DashboardWidgetProps> = (props) => {
                                                             Select the ChatGPT version to use{" "}
                                                         </Text>
                                                         <Text size="small" light>
-                                                            4-mini (Efficient version) Faster, versatile model for quick and reliable content generation.
+                                                            4-mini (Efficient version): Faster, versatile model for quick and reliable content generation.
                                                         </Text>
                                                         <Text size="small" light>
-                                                            4o (Advanced version) Latest model with high-quality translation and the most up-to-date features.
+                                                            4o (Advanced version): Latest model with high-quality translation and the most up-to-date features.
                                                         </Text>
                                                         <Box direction="horizontal" gap={"20px"}>
                                                             <Button
